@@ -143,6 +143,12 @@ td:first-child,th:first-child{text-align:left;font-weight:600}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,-160%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:16px;font-weight:600;font-size:14px;transition:transform .4s cubic-bezier(.2,.9,.3,1.15);z-index:9;width:max-content;max-width:90vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 #toast.on{transform:translate(-50%,0)}
 #ov2{position:fixed;z-index:6}
+.lb{margin:6px 0 12px;display:flex;flex-direction:column;gap:4px}
+.lbr{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:var(--bg);text-align:left;font-size:14.5px}
+.lbr.me{box-shadow:inset 0 0 0 2px var(--accent)}.lbk{font-weight:800;text-align:center}.lbn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbn small{color:var(--sub)}
+.lbt{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}.lbt small{display:block;font-size:10.5px;color:var(--sub);font-weight:600}
+.fdps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.fdp{background:var(--bg);border-radius:12px;padding:8px 6px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.fdp b{font-size:13px}.fdp span{font-size:11px;color:var(--sub)}
 .ccard{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 14px 12px;margin-bottom:10px}
 .ccard .ct{font-weight:700;font-size:15px}.ccard .cn{font-size:12px;color:var(--sub);margin:2px 0 8px;line-height:1.35}
 svg.chart{width:100%;display:block;overflow:visible;font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums}
@@ -219,6 +225,8 @@ div.srow{cursor:default}
   <div class="label">Daily <span id="dailyClock"></span></div>
   <div class="row3" id="dailyRow"></div>
   <div class="streak" id="streakLine"></div>
+  <div class="label">Friends' board <span id="fdLeft">Same board for everyone</span></div>
+  <button class="card" id="fdCard"></button>
   <div class="label">Weekly challenge <span id="weekLeft"></span></div>
   <button class="card" id="weekCard"></button>
   <div class="label">Classic</div>
@@ -274,7 +282,7 @@ div.srow{cursor:default}
     <div class="seg mini" id="histSeg" style="margin:0 0 10px"></div>
     <div id="charts"></div>
     <div class="label">Stats</div><div id="statTable"></div>
-    <div class="foot"><button id="ver">Sweep v0.8.1</button><button id="reset">Reset progress</button></div>
+    <div class="foot"><button id="ver">Sweep v0.9</button><button id="reset">Reset progress</button></div>
   </div>
 </section>
 <div class="overlay hidden" id="ov2"><div class="sheet" id="sheet2"></div></div>
@@ -469,17 +477,17 @@ function genClassic(W,H,total,start,rng=Math.random,opts={}){
   const cand=[]; for(let i=0;i<N;i++) if(!zone[i]&&(!mask||mask[i])) cand.push(i);
   const place=()=>{ const m=new Uint8Array(N), c=cand.slice();
     for(let k=0;k<cellsN;k++){ const r=k+(rng()*(c.length-k)|0); [c[k],c[r]]=[c[r],c[k]]; m[c[k]]=dbl&&k<dbl.doubles?2:1; } return m; };
-  let mines=place(), fallback=null; const t0=Date.now(), soft=budget*.6;
+  let mines=place(), fallback=null; const t0=Date.now(), soft=budget*.6, steps=opts.steps||0;
   for(let it=0;;it++){
     const r=solve(N,nb,mines,start,total,mask,opts);
     if(r.ok){
       const good=(!opts.accept||opts.accept(r.stats))&&(!opts.snap||r.snap);
       if(good) return {mines,tries:it,ok:true,stats:r.stats,snap:r.snap};
       if(!opts.snap&&!fallback) fallback={mines:mines.slice(),stats:r.stats};
-      if(Date.now()-t0>soft&&fallback) return {mines:fallback.mines,tries:it,ok:true,stats:fallback.stats,graded:false};
+      if((steps?it>=steps*.6:Date.now()-t0>soft)&&fallback) return {mines:fallback.mines,tries:it,ok:true,stats:fallback.stats,graded:false};
       mines=place(); continue;
     }
-    if(Date.now()-t0>budget) return fallback?{mines:fallback.mines,tries:it,ok:true,stats:fallback.stats,graded:false}:{mines,tries:it,ok:false};
+    if(steps?it>=steps:Date.now()-t0>budget) return fallback?{mines:fallback.mines,tries:it,ok:true,stats:fallback.stats,graded:false}:{mines,tries:it,ok:false};
     if(it%50===49){ mines=place(); continue; }
     const fr=[], inr=[];
     for(let i=0;i<N;i++){ if(r.rev[i]||(mask&&!mask[i])) continue; let adj=false;
@@ -788,6 +796,49 @@ const toB64U=b=>{ let s=''; for(let i=0;i<b.length;i+=3){ const n=(b[i]<<16)|((b
   s+=B64U[n>>18&63]+B64U[n>>12&63]+(i+1<b.length?B64U[n>>6&63]:'')+(i+2<b.length?B64U[n&63]:''); } return s; };
 const fromB64U=s=>{ const out=[]; let buf=0,bits=0; for(const ch of s){ const v=B64U.indexOf(ch); if(v<0) throw new Error('char'); buf=(buf<<6)|v; bits+=6; if(bits>=8){ bits-=8; out.push((buf>>bits)&255); } } return Uint8Array.from(out); };
 const MODES=['sq','hex','wrap','knight'];
+const cleanName=t=>[...String(t).replace(/[\u0000-\u001f\u007f<>&"'`]/g,'')].slice(0,16).join('').trim(); // names are display-only text
+
+// ---------- Friends' Board: the same board on every device for a given date ----------
+// Seeded from the date alone and generated with a step limit instead of a time limit, so a slow phone
+// and a fast one build the identical board. Results carry a fingerprint of the board, so a friend on a
+// different game version is detected instead of being compared on a different board.
+const FD_VER=1, FD_W=16, FD_H=16, FD_M=40, EPOCH=Date.UTC(2024,0,1);
+function seedRng(str){ // cyrb128 -> sfc32
+  let h1=1779033703,h2=3144134277,h3=1013904242,h4=2773480762;
+  for(let i=0;i<str.length;i++){ const k=str.charCodeAt(i); h1=h2^Math.imul(h1^k,597399067); h2=h3^Math.imul(h2^k,2869860233); h3=h4^Math.imul(h3^k,951274213); h4=h1^Math.imul(h4^k,2716044813); }
+  h1=Math.imul(h3^(h1>>>18),597399067); h2=Math.imul(h4^(h2>>>22),2869860233); h3=Math.imul(h1^(h3>>>17),951274213); h4=Math.imul(h2^(h4>>>19),2716044813);
+  let a=(h1^h2^h3^h4)>>>0, b=(h2^h1)>>>0, c=(h3^h1)>>>0, d=(h4^h1)>>>0;
+  const r=()=>{ a>>>=0; b>>>=0; c>>>=0; d>>>=0; let t=(a+b)|0; a=b^(b>>>9); b=(c+(c<<3))|0; c=(c<<21)|(c>>>11); d=(d+1)|0; t=(t+d)|0; c=(c+t)|0; return (t>>>0)/4294967296; };
+  for(let i=0;i<15;i++) r(); return r;
+}
+function boardPrint(W,H,mines,start){ let h=2166136261; const add=v=>{ h^=v&255; h=Math.imul(h,16777619); };
+  add(W); add(H); add(start&255); add(start>>8); for(let i=0;i<mines.length;i++) add(mines[i]); return (h>>>0).toString(16).padStart(8,'0'); }
+const fdDay=date=>{ const [y,m,d]=date.split('-').map(Number); return Math.round((Date.UTC(y,m-1,d)-EPOCH)/864e5); };
+const fdDate=n=>{ const t=new Date(EPOCH+n*864e5); return t.getUTCFullYear()+'-'+String(t.getUTCMonth()+1).padStart(2,'0')+'-'+String(t.getUTCDate()).padStart(2,'0'); };
+function fdBoard(date){
+  for(let a=0;a<20;a++){ const rng=seedRng(`SWFD${FD_VER}|${date}|${a}`);
+    const sx=4+(rng()*8|0), sy=4+(rng()*8|0), start=sy*FD_W+sx;
+    const g=genClassic(FD_W,FD_H,FD_M,start,rng,{steps:8000});
+    if(g.ok) return {W:FD_W,H:FD_H,M:FD_M,start,mines:g.mines,fp:boardPrint(FD_W,FD_H,g.mines,start)}; }
+  throw new Error('fd generation failed');
+}
+// Result code: SWR1.<base64url> = version, day, player id (6 bytes, random, anonymous), won+hints, time, board print, name
+function encodeResult(r){
+  const b=[1, r.day&255, r.day>>8, ...r.pid, (r.won?1:0)|(Math.min(127,r.hints|0)<<1)];
+  const t=Math.max(0,Math.min(0xffffff,Math.round(r.time*10))); b.push(t&255,(t>>8)&255,t>>16);
+  for(let i=0;i<8;i+=2) b.push(parseInt(r.fp.substr(i,2),16));
+  const nm=new TextEncoder().encode(cleanName(r.name||'')); b.push(nm.length,...nm);
+  return 'SWR1.'+toB64U(Uint8Array.from(b));
+}
+function decodeResult(code){
+  const m=String(code).match(/SWR1\.([A-Za-z0-9_-]+)/); if(!m) throw new Error('nocode');
+  const b=fromB64U(m[1]); if(b[0]!==1||b.length<18) throw new Error('version');
+  let p=1; const day=b[p]|(b[p+1]<<8); p+=2; const pid=[...b.slice(p,p+6)]; p+=6; const st=b[p++];
+  const time=(b[p]|(b[p+1]<<8)|(b[p+2]<<16))/10; p+=3; const fp=[...b.slice(p,p+4)].map(v=>v.toString(16).padStart(2,'0')).join(''); p+=4;
+  const nl=b[p++]||0, name=cleanName(new TextDecoder().decode(b.slice(p,p+nl)));
+  return {day,date:fdDate(day),pid:pid.map(v=>v.toString(16).padStart(2,'0')).join(''),won:!!(st&1),hints:st>>1,time,fp,name};
+}
+const allCodes=(text,re)=>[...String(text).matchAll(re)].map(m=>m[0]);
 function encodeChallenge(g,meta){
   const b=[1, MODES.indexOf(g.mode)|(g.dbl?4:0)|(g.NP<g.N?8:0), meta.diff|0, g.W, g.H, meta.start&255, meta.start>>8,
     Math.min(65535,Math.round(meta.time*10))&255, Math.min(65535,Math.round(meta.time*10))>>8, meta.hints|0, meta.src|0, meta.lv|0];
@@ -801,7 +852,7 @@ function decodeChallenge(text){
   const m=String(text).match(/SWC1\.([A-Za-z0-9_-]+)/); if(!m) throw new Error('nocode');
   const b=fromB64U(m[1]); let p=0; const ver=b[p++]; if(ver!==1) throw new Error('version');
   const fl=b[p++], diff=b[p++], W=b[p++], H=b[p++], start=b[p++]|(b[p++]<<8), time=(b[p++]|(b[p++]<<8))/10, hints=b[p++], src=b[p++], lv=b[p++];
-  const nl=b[p++], name=[...new TextDecoder().decode(b.slice(p,p+nl)).replace(/[\u0000-\u001f\u007f<>&"'`]/g,'')].slice(0,16).join('').trim(); p+=nl; // names are display-only text
+  const nl=b[p++], name=cleanName(new TextDecoder().decode(b.slice(p,p+nl))); p+=nl;
   const N=W*H, rd=(()=>{ let bi=0; return ()=>{ const v=(b[p+(bi>>3)]>>(7-(bi&7)))&1; bi++; return v; }; })();
   if(!W||!H||N>4000) throw new Error('size');
   const mode=MODES[fl&3], dbl=!!(fl&4), hasMask=!!(fl&8);
@@ -810,7 +861,7 @@ function decodeChallenge(text){
   if(start>=N||!mask[start]||mines[start]) throw new Error('start');
   return {mode,dbl,hasMask,mask,mines,W,H,diff,start,time,hints,src,lv,name};
 }
-if(typeof module!=='undefined') module.exports={deduce,genClassic,classicSolve,makeNb,Classic,Endless,K,KX,KY,nbK,classicHint,endlessHint,countNums,shapeMask,SHAPES,SHAPE_FILL,makePuzzle,makeNb,dblSolve,bbbv,analyze,classify,encodeChallenge,decodeChallenge};
+if(typeof module!=='undefined') module.exports={deduce,genClassic,classicSolve,makeNb,Classic,Endless,K,KX,KY,nbK,classicHint,endlessHint,countNums,shapeMask,SHAPES,SHAPE_FILL,makePuzzle,makeNb,dblSolve,bbbv,analyze,classify,encodeChallenge,decodeChallenge,fdBoard,fdDay,fdDate,encodeResult,decodeResult,seedRng,boardPrint,allCodes,cleanName};
 
 // ===================== CAMPAIGNS =====================
 // Each level is a recipe; every attempt gets a fresh board built from it.
@@ -887,6 +938,7 @@ if(typeof module!=='undefined') module.exports={CAMPS,levelSpec};
 // ===================== APP =====================
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 const ICON={
+ people:'<svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.6c2.6-.2 4.5 1.4 5 4.4"/></svg>',
  chart:'<svg class="i" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="M8 16l4-5 3 3 5-7"/></svg>',
  share:'<svg class="i" viewBox="0 0 24 24"><path d="M12 15V3M7.5 7.5L12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
  pause:'<svg class="i" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></svg>',
@@ -1021,6 +1073,22 @@ const THEMES=[
   bg:'#020a10',panel:'#08171f',ink:'#d8fbff',sub:'#5f8a96',accent:'#3ff0d0',accentInk:'#020a10',
   cover:(x,y)=>`hsl(${192+6*Math.sin(x*.5+y*.2)} 62% ${15+5*tri((x+y*2)/9)}%)`,open:'#020a10',gap:.08,rad:.3,
   nums:['#3ff0d0','#7dd3ff','#c58bff','#ff7fb5','#ffe17a','#7affc4','#ffffff','#5f8a96'],flag:'#ffe17a',mine:'#3ff0d0',boom:'#3a1028'},
+ {id:'copper',name:'Copper',req:'fd3w',desc:'Warm, burnished metal for a podium week.',dark:true,glow:true,
+  bg:'#1a110c',panel:'#24170f',ink:'#f6e3d4',sub:'#b08a72',accent:'#e0874e',accentInk:'#1a110c',
+  cover:(x,y)=>`hsl(${20+5*tri((x+y)/8)} 58% ${36+10*tri((x*2+y)/11)}%)`,shade:'#5a2e14',open:'#1a110c',gap:.08,rad:.24,
+  nums:['#f0a274','#9fd6a8','#ff8f7a','#d9b4ff','#f6c98a','#9fe0e0','#f6e3d4','#b08a72'],flag:'#f6e3d4',mine:'#e0874e',boom:'#5a1a10'},
+ {id:'silver',name:'Silver',req:'fd2w',desc:'Brushed steel for a week at the top two.',
+  bg:'#eceef2',panel:'#f8f9fb',ink:'#22262d',sub:'#7c8491',accent:'#5d6878',accentInk:'#ffffff',
+  cover:(x,y)=>`hsl(${212+4*tri(x/6)} 9% ${70+9*tri((x-y*2)/12)}%)`,shade:'#98a0ac',open:'#f8f9fb',gap:.07,rad:.22,
+  nums:['#2f6db3','#2f8a52','#c23a3a','#6a4bb0','#9a5b12','#287a86','#22262d','#7c8491'],flag:'#c23a3a',mine:'#22262d',boom:'#ffc9c9'},
+ {id:'gilded',name:'Gilded',req:'fd1w',desc:'Gold leaf on ivory for a reigning champion.',
+  bg:'#fbf5e4',panel:'#fffaf0',ink:'#3a2a08',sub:'#a08a5a',accent:'#c99a1b',accentInk:'#ffffff',
+  cover:(x,y)=>`hsl(${44+3*tri((x+y)/9)} 78% ${52+9*tri((x*3-y)/13)}%)`,shade:'#a8780f',open:'#fffaf0',gap:.07,rad:.24,
+  nums:['#2f5fa8','#3f7d3a','#c23a3a','#6a4bb0','#8a4a12','#2f7f86','#3a2a08','#a08a5a'],flag:'#8a2a12',mine:'#3a2a08',boom:'#ffd0b8'},
+ {id:'pearlboard',name:'Pearl',req:'fd1t',desc:'Iridescent shell for a Friends\' Board dynasty.',
+  bg:'#f6f3f7',panel:'#fdfbfe',ink:'#3b3346',sub:'#958ea3',accent:'#a77fcf',accentInk:'#ffffff',
+  cover:(x,y)=>`hsl(${265+55*Math.sin(x*.42+y*.27)} ${42+10*tri((x+y)/7)}% ${86+4*tri((x*2-y)/9)}%)`,shade:'#cbc2d8',open:'#fdfbfe',gap:.08,rad:.34,
+  nums:['#3b6fc4','#2f8a6a','#c2456a','#7a4bc0','#b0661a','#2a8a9a','#3b3346','#958ea3'],flag:'#b0548a',mine:'#3b3346',boom:'#ffd6e4'},
  {id:'honeycomb',name:'Honeycomb',req:'rulebender',desc:'Warm amber cells, a little sticky.',
   bg:'#fff6dc',panel:'#fffbef',ink:'#3f2a07',sub:'#a88a52',accent:'#e09a12',accentInk:'#ffffff',
   cover:(x,y)=>`hsl(${38+4*Math.sin(x*.6+y*.35)} 92% ${62+6*tri((x+y*2)/10)}%)`,shade:'#c98a1c',open:'#fffaea',gap:.07,rad:.32,
@@ -1034,7 +1102,9 @@ const FLAGS=[{id:'pennant',name:'Pennant',desc:'The classic.'},{id:'pin',name:'P
  {id:'flame',name:'Flame',req:'flawless',desc:'Keep the streak burning.'},{id:'compass',name:'Compass',req:'trail',desc:'For those who wander far.'},
  {id:'gem',name:'Gem',lvl:14,desc:'A cut stone marks the spot.'},{id:'laurel',name:'Laurel',lvl:20,desc:'A wreath for level 20.'},
  {id:'lantern',name:'Lantern',stars:30,desc:'Light the way through the campaign.'},{id:'ribbon',name:'Ribbon',req:'honours',desc:'First prize.'},
- {id:'magnifier',name:'Magnifier',req:'puzzler',desc:'For the sharpest eyes.'},{id:'trophy',name:'Trophy',req:'rival',desc:'Bragging rights, on every mine.'}];
+ {id:'magnifier',name:'Magnifier',req:'puzzler',desc:'For the sharpest eyes.'},{id:'trophy',name:'Trophy',req:'rival',desc:'Bragging rights, on every mine.'},
+ {id:'medal_cu',name:'Copper Medal',req:'fd3d',desc:'You made the podium.'},{id:'medal_ag',name:'Silver Medal',req:'fd2d',desc:'Runner-up, and closing in.'},
+ {id:'medal_au',name:'Gold Medal',req:'fd1d',desc:'Fastest of the day.'},{id:'pearl',name:'Pearl',req:'fd1t',desc:'A dynasty, set in pearl.'}];
 const SOUNDS=[{id:'soft',name:'Soft',desc:'Gentle taps and chimes.'},{id:'chip',name:'Chiptune',lvl:4,desc:'8-bit bleeps and bloops.'},{id:'marimba',name:'Marimba',lvl:8,desc:'Warm wooden notes.'},
  {id:'musicbox',name:'Music Box',lvl:13,desc:'Tiny bright chimes.'}];
 const TRACKS=[{id:'day',name:'Daylight',desc:'The original. Bright and breezy.',track:1},{id:'eve',name:'Evening',lvl:19,desc:'Mellow and late-night.',track:1}];
@@ -1045,7 +1115,9 @@ const REVEALS=[{id:'fade',name:'Fade',desc:'Tiles melt softly away.'},{id:'pop',
 const FXS=[{id:'none',name:'None',desc:'Just the sweep of light.'},{id:'confetti',name:'Confetti',lvl:7,desc:'A burst of colour on every win.'},
  {id:'fireworks',name:'Fireworks',req:'master',desc:'Bursts light up the sky.'},{id:'starfall',name:'Starfall',req:'veteran',desc:'A shower of twinkling stars.'},
  {id:'comet',name:'Comet',lvl:16,desc:'Comets streak across the sky.'},{id:'curtain',name:'Aurora Curtain',lvl:20,desc:'Shimmering northern lights.'},
- {id:'supernova',name:'Supernova',req:'perfect',desc:'A blinding burst of light.'},{id:'ripples',name:'Ripples',req:'regular',desc:'Rings of colour spread across the screen.'}];
+ {id:'supernova',name:'Supernova',req:'perfect',desc:'A blinding burst of light.'},{id:'ripples',name:'Ripples',req:'regular',desc:'Rings of colour spread across the screen.'},
+ {id:'coins',name:'Coin Shower',req:'fd3t',desc:'A rain of spinning copper.'},{id:'streamers',name:'Silver Streamers',req:'fd2t',desc:'Party poppers in polished silver.'},
+ {id:'pearlbloom',name:'Pearl Bloom',req:'fd1t',desc:'Iridescent pearls drift up and shimmer.'}];
 const ACH=[
  {id:'first',name:'First Sweep',desc:'Win any board'},
  {id:'inter',name:'Getting Serious',desc:'Win an Intermediate board'},
@@ -1067,6 +1139,15 @@ const ACH=[
  {id:'perfect',name:'Perfectionist',desc:'Earn all 3 stars on every level of a campaign'},
  {id:'shapeshift',name:'Shapeshifter',desc:'Win on all seven board shapes'},
  {id:'puzzler',name:'Puzzle Master',desc:'Earn 3 stars on all three puzzle levels'},
+ {id:'fd3d',name:'Podium',desc:'Finish top 3 on a Friends\' Board (beating at least one friend)'},
+ {id:'fd2d',name:'Contender',desc:'Finish top 2 on a Friends\' Board (beating at least one friend)'},
+ {id:'fd1d',name:'Champion',desc:'Finish 1st on a Friends\' Board (beating at least one friend)'},
+ {id:'fd3w',name:'Podium Week',desc:'Top 3 on the Friends\' Board 7 days in a row'},
+ {id:'fd2w',name:'Contender Week',desc:'Top 2 on the Friends\' Board 7 days in a row'},
+ {id:'fd1w',name:'Reigning Champion',desc:'1st on the Friends\' Board 7 days in a row'},
+ {id:'fd3t',name:'Podium Regular',desc:'Top 3 on 30 Friends\' Boards'},
+ {id:'fd2t',name:'Contender Regular',desc:'Top 2 on 30 Friends\' Boards'},
+ {id:'fd1t',name:'Dynasty',desc:'1st on 30 Friends\' Boards'},
  {id:'rival',name:'Rival',desc:'Beat a friend\'s time on their challenge board'},
  {id:'regular',name:'Regular',desc:'Earn 5 weekly challenge badges'},
  {id:'rulebender',name:'Rule Bender',desc:'Win a Hex, Wraparound, Knight\'s move and Double mines board'},
@@ -1097,7 +1178,7 @@ addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); window.__sweepIn
 addEventListener('appinstalled',()=>{ window.__sweepInstall=null; if(cur==='home') renderHome(); toast('Sweep installed. Find it on your home screen.'); });
 const REDUCED=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const defSave=()=>({camp:{},shapes:{},rules:{},rrule:'classic',rshape:'standard',track:'day',ds:{cur:0,best:0,last:'',sevens:0},mstones:0,expCells:0,runMeta:null,theme:'minimal',flag:'pennant',reveal:'fade',sound:'soft',fx:'none',sfx:true,music:true,haptics:true,motion:!REDUCED,
-  autoflag:false,loupe:true,fullscreen:false,cb:false,lefty:false,name:'',hist:[],week:{},wbadges:0,
+  autoflag:false,loupe:true,fullscreen:false,fd:null,cb:false,lefty:false,name:'',hist:[],week:{},wbadges:0,
   xp:0,ach:{},stats:{},endless:{},streak:0,bestStreak:0,wins:0,dens:'standard',daily:{date:''},appearance:'system',hints:0,hintDate:'',tutDone:false,devAll:false});
 let S=defSave(); try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s) S=Object.assign(defSave(),s); }catch(e){}
 const persist=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
@@ -1115,7 +1196,7 @@ const pick=(list,id)=>{ const it=list.find(x=>x.id===id); return it&&owned(it)?i
 const flagStyle=()=>pick(FLAGS,S.flag), soundPack=()=>pick(SOUNDS,S.sound), fxStyle=()=>pick(FXS,S.fx), revealStyle=()=>pick(REVEALS,S.reveal);
 const KINDS=()=>[[THEMES,'board'],[FLAGS,'flag'],[REVEALS,'reveal'],[SOUNDS,'sounds'],[FXS,'effect'],[TRACKS,'soundtrack']];
 const ALLC=()=>[...THEMES,...FLAGS,...REVEALS,...SOUNDS,...FXS,...TRACKS];
-const achRw=id=>{ for(const [list,kind] of KINDS()){ const it=list.find(t=>t.req===id); if(it) return `${it.name} ${kind}`; } return ''; };
+const achRw=id=>{ const out=[]; for(const [list,kind] of KINDS()) for(const it of list) if(it.req===id) out.push(`${it.name} ${kind}`); return out.join(' + '); };
 const motionOn=()=>S.motion!==false;
 const goal=id=>ACH.find(a=>a.id===id)||EXP.find(e=>e.id===id);
 const lockText=it=>it.lvl?`Reach level ${it.lvl}`:it.stars?`Earn ${it.stars} campaign stars`:'Unlock: '+goal(it.req).desc;
@@ -1294,8 +1375,21 @@ function rr(ctx,x,y,w,h,r){
   r=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+r,y);
   ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); ctx.fill();
 }
+const METAL={medal_cu:['#ffd2b0','#d27b45','#7a3a14'],medal_ag:['#ffffff','#c5ccd6','#6f7886'],medal_au:['#fff1b0','#e3ad24','#8a5a07']};
 function drawFlag(ctx,x,y,s,col,style,hole){
   ctx.fillStyle=col; ctx.strokeStyle=col; ctx.lineCap='round'; ctx.lineJoin='round';
+  if(METAL[style]){ const [hi,mid,lo]=METAL[style], cx=x+s*.5, cy=y+s*.56, R=s*.2;
+    ctx.beginPath(); ctx.moveTo(x+s*.34,y+s*.16); ctx.lineTo(x+s*.46,y+s*.16); ctx.lineTo(cx,y+s*.4); ctx.lineTo(x+s*.54,y+s*.16); ctx.lineTo(x+s*.66,y+s*.16); ctx.lineTo(x+s*.56,y+s*.42); ctx.lineTo(x+s*.44,y+s*.42); ctx.closePath(); ctx.fill();
+    const g=ctx.createRadialGradient(cx-R*.4,cy-R*.45,R*.1,cx,cy,R); g.addColorStop(0,hi); g.addColorStop(.55,mid); g.addColorStop(1,lo);
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill(); ctx.strokeStyle=lo; ctx.lineWidth=Math.max(1,s*.025); ctx.stroke();
+    ctx.fillStyle=lo; ctx.globalAlpha*=.55; starPath(ctx,cx,cy+s*.005,R*.55,-Math.PI/2); ctx.fill(); ctx.globalAlpha/=.55; return; }
+  if(style==='pearl'){ const cx=x+s*.5, cy=y+s*.5, R=s*.24;
+    ctx.save(); ctx.globalAlpha*=.25; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(cx,cy+R*.95,R*.85,R*.22,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+    const g=ctx.createRadialGradient(cx-R*.35,cy-R*.4,R*.05,cx,cy,R); g.addColorStop(0,'#ffffff'); g.addColorStop(.35,'#f7eefa'); g.addColorStop(.7,'#dfe8f7'); g.addColorStop(.9,'#e8dcf2'); g.addColorStop(1,'#c9bcd8');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+    const t=performance.now()/1400, h=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R); h.addColorStop(0,`hsla(${(t*60)%360},80%,85%,0)`); h.addColorStop(.5,`hsla(${(t*60+120)%360},80%,85%,.35)`); h.addColorStop(1,`hsla(${(t*60+240)%360},80%,85%,0)`);
+    ctx.fillStyle=h; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.9)'; ctx.beginPath(); ctx.ellipse(cx-R*.38,cy-R*.42,R*.22,R*.13,-.6,0,Math.PI*2); ctx.fill(); return; }
   if(style==='gem'){ const P=[[.32,.3],[.68,.3],[.8,.45],[.5,.8],[.2,.45]]; ctx.beginPath(); P.forEach(([a,b],i)=>i?ctx.lineTo(x+a*s,y+b*s):ctx.moveTo(x+a*s,y+b*s)); ctx.closePath(); ctx.fill();
     if(hole){ ctx.strokeStyle=hole; ctx.lineWidth=Math.max(1,s*.035); ctx.beginPath(); ctx.moveTo(x+.21*s,y+.45*s); ctx.lineTo(x+.79*s,y+.45*s); ctx.moveTo(x+.42*s,y+.31*s); ctx.lineTo(x+.38*s,y+.45*s); ctx.lineTo(x+.5*s,y+.78*s); ctx.moveTo(x+.58*s,y+.31*s); ctx.lineTo(x+.62*s,y+.45*s); ctx.lineTo(x+.5*s,y+.78*s); ctx.stroke(); } return; }
   if(style==='laurel'){ const cx=x+s*.5, cy=y+s*.5, R=s*.27;
@@ -1496,6 +1590,14 @@ function fxFrame(now){
     else if(p.kind==='band'){ p.x+=Math.sin(now/520+p.ph)*.7; c.globalAlpha=Math.sin(Math.PI*k)*.5; const gr=c.createLinearGradient(0,p.y,0,p.y+p.h);
       gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(.45,p.col); gr.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=gr; c.fillRect(p.x-p.w/2,p.y,p.w,p.h); }
     else if(p.kind==='ring'){ c.globalAlpha=(1-k)*.9; c.lineWidth=Math.max(.5,(1-k)*p.size); c.beginPath(); c.arc(p.x,p.y,p.r0+k*p.rg,0,Math.PI*2); c.stroke(); }
+    else if(p.kind==='coin'){ c.save(); c.translate(p.x,p.y); const w=Math.abs(Math.cos(p.rot))*p.size+.6; const g=c.createLinearGradient(-w,-p.size,w,p.size);
+      g.addColorStop(0,p.hi); g.addColorStop(.5,p.col); g.addColorStop(1,p.lo); c.fillStyle=g; c.beginPath(); c.ellipse(0,0,w,p.size,0,0,Math.PI*2); c.fill();
+      c.strokeStyle=p.lo; c.lineWidth=1; c.stroke(); c.restore(); }
+    else if(p.kind==='streamer'){ c.lineWidth=p.size; c.lineCap='round'; c.beginPath(); const L=p.len, a=Math.atan2(p.vy,p.vx)+Math.PI;
+      c.moveTo(p.x,p.y); for(let i=1;i<=6;i++){ const d=L*i/6, wv=Math.sin(now/90+p.ph+i*.9)*p.size*1.6; c.lineTo(p.x+Math.cos(a)*d-Math.sin(a)*wv,p.y+Math.sin(a)*d+Math.cos(a)*wv); } c.stroke(); }
+    else if(p.kind==='bubble'){ p.x+=Math.sin(now/600+p.ph)*.5; const r=p.size, hue=(p.h0+now/12)%360, g=c.createRadialGradient(p.x-r*.35,p.y-r*.4,r*.05,p.x,p.y,r);
+      g.addColorStop(0,'rgba(255,255,255,.95)'); g.addColorStop(.6,`hsla(${hue},70%,88%,.55)`); g.addColorStop(1,`hsla(${(hue+90)%360},70%,80%,.35)`);
+      c.fillStyle=g; c.beginPath(); c.arc(p.x,p.y,r,0,Math.PI*2); c.fill(); c.strokeStyle=`hsla(${(hue+180)%360},60%,75%,.6)`; c.lineWidth=1; c.stroke(); }
     else if(p.kind==='flash'){ c.globalAlpha=(1-k)*.8; const r=p.r0+k*p.rg, gr=c.createRadialGradient(p.x,p.y,0,p.x,p.y,r); gr.addColorStop(0,p.col); gr.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=gr; c.beginPath(); c.arc(p.x,p.y,r,0,Math.PI*2); c.fill(); }
     else { starPath(c,p.x,p.y,p.size*(.75+.25*Math.sin(now/90+(p.ph||0))),p.rot); c.fill(); }
   }
@@ -1537,7 +1639,21 @@ function ripples(){ const W=innerWidth,H=innerHeight,now=performance.now(),cols=
   for(let i=0;i<7;i++){ const x=W*(.2+Math.random()*.6), y=H*(.2+Math.random()*.45), t=now+i*170;
     for(let k=0;k<3;k++) P.push({kind:'ring',x,y,vx:0,vy:0,g:0,dr:1,born:t+k*120,life:1300,r0:4,rg:90+Math.random()*60,size:5-k,col:cols[(i+k)%cols.length]}); }
   fxAdd(P); }
-const FXRUN={confetti,fireworks,starfall,comet,curtain,supernova,ripples};
+function coins(){ const W=innerWidth,now=performance.now(),P=[];
+  for(let i=0;i<70;i++) P.push({kind:'coin',x:Math.random()*W,y:-20-Math.random()*60,vx:(Math.random()-.5)*1.2,vy:2+Math.random()*3,g:.12,dr:.995,born:now+Math.random()*1300,life:2400,
+    rot:Math.random()*6,vr:.12+Math.random()*.18,size:6+Math.random()*4,hi:'#ffd2b0',col:'#d27b45',lo:'#7a3a14'});
+  for(let b=0;b<4;b++) setTimeout(()=>sfx('pop'),200+b*330); fxAdd(P); }
+function streamers(){ const W=innerWidth,H=innerHeight,now=performance.now(),cols=['#ffffff','#dfe3ea','#b9c1cc','#8e98a6',theme().accent],P=[];
+  for(const [sx,dir] of [[0,1],[W,-1]]) for(let i=0;i<34;i++){ const a=(-Math.PI/2)+dir*(.12+Math.random()*.42), sp=14+Math.random()*9;
+    P.push({kind:'streamer',x:sx,y:H*.95,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,g:.22,dr:.975,born:now+(i%6)*40,life:2400+Math.random()*600,size:2.6+Math.random()*1.8,len:26+Math.random()*26,ph:Math.random()*6,col:cols[i%cols.length]}); }
+  for(let i=0;i<50;i++) P.push({kind:'spark',x:Math.random()*W,y:H*.5,vx:(Math.random()-.5)*3,vy:-Math.random()*3,g:.05,dr:.98,born:now+300+Math.random()*500,life:900,size:1.6,col:'#ffffff'});
+  sfx('pop'); setTimeout(()=>sfx('pop'),120); fxAdd(P); }
+function pearlbloom(){ const W=innerWidth,H=innerHeight,now=performance.now(),cx=W/2,cy=H*.45,P=[];
+  P.push({kind:'flash',x:cx,y:cy,vx:0,vy:0,g:0,dr:1,born:now,life:1100,r0:20,rg:Math.max(W,H)*.5,col:'rgba(255,240,250,1)'});
+  for(let i=0;i<3;i++) P.push({kind:'ring',x:cx,y:cy,vx:0,vy:0,g:0,dr:1,born:now+i*180,life:1500,r0:10,rg:Math.max(W,H)*.5,size:6-i*1.5,col:['#f3d9ef','#d9e6fb','#dff5ec'][i]});
+  for(let i=0;i<46;i++) P.push({kind:'bubble',x:Math.random()*W,y:H*(.5+Math.random()*.55),vx:0,vy:-(1.6+Math.random()*2.6),g:-.004,dr:1,born:now+Math.random()*1500,life:2800,size:6+Math.random()*12,ph:Math.random()*6,h0:Math.random()*360});
+  fxAdd(P); }
+const FXRUN={confetti,fireworks,starfall,comet,curtain,supernova,ripples,coins,streamers,pearlbloom};
 function winFx(){ if(!motionOn()) return; const f=FXRUN[fxStyle()]; if(f) f(); }
 
 // ===================== GAME SESSION =====================
@@ -1668,7 +1784,7 @@ function restoreRun(){
 function continueRun(){ if(G&&cfg&&cfg.kind==='endless'&&G.state==='play'){ show('game'); hud(); } else restoreRun(); }
 addEventListener('pagehide',()=>saveRun());
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) saveRun(); });
-const restart=()=>cfg.tut?startTutorial():cfg.challenge?startChallenge(cfg.challenge):cfg.camp?startLevel(cfg.camp.ci,cfg.camp.li):cfg.daily?show('home'):cfg.kind==='classic'?startClassic(cfg.d,cfg.pick,cfg.rule):startEndless(cfg.d);
+const restart=()=>cfg.fd?show('home'):cfg.tut?startTutorial():cfg.challenge?startChallenge(cfg.challenge):cfg.camp?startLevel(cfg.camp.ci,cfg.camp.li):cfg.daily?show('home'):cfg.kind==='classic'?startClassic(cfg.d,cfg.pick,cfg.rule):startEndless(cfg.d);
 
 // ---------- daily boards: pure RNG, one attempt each, today only ----------
 const today=()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
@@ -1682,7 +1798,7 @@ function dailyState(){ if(!S.daily||S.daily.date!==today()){ S.daily={date:today
 const bits=a=>Array.from(a).join(''), unbits=s=>Uint8Array.from(s,ch=>+ch);
 function saveDaily(){
   if(!cfg||!cfg.daily) return; const ds=dailyState(); if(cfg.date!==ds.date) return;
-  if(G.state==='play') ds[cfg.d]={st:'play',save:{W:G.W,H:G.H,m:bits(G.mines),r:bits(G.rev),f:bits(G.flag),el:G.elapsed(),fp:G.flagsPlaced,hu:G.hintsUsed||0}};
+  if(G.state==='play') ds[cfg.fd?'fd':cfg.d]={st:'play',save:{W:G.W,H:G.H,m:bits(G.mines),r:bits(G.rev),f:bits(G.flag),el:G.elapsed(),fp:G.flagsPlaced,hu:G.hintsUsed||0}};
   persist();
 }
 function restoreClassic(sv,M){
@@ -1708,7 +1824,7 @@ function act(px,py,kind){
   if(G.pending){ G.pending=false; G.t0=Date.now(); }
   // Endless: you can only dig tiles touching your cleared area (no blind taps far away)
   if(cfg.kind==='endless'&&prev==='play'&&!c.r&&!c.f&&!(wantFlag)&&!G.st.has(K(x,y))){ toast('Dig outward from the area you\'ve cleared.',true); buzz(20); return; }
-  if(cfg.challenge&&G.revCount===0&&(y*G.W+x)!==cfg.challenge.start){ toast('Start on the glowing tile: that\'s where your friend began.',true); buzz(20); return; }
+  if(cfg.start!=null&&G.revCount===0&&(y*G.W+x)!==cfg.start){ toast(cfg.fd?'Start on the glowing tile: everyone starts there today.':'Start on the glowing tile: that\'s where your friend began.',true); buzz(20); return; }
   const before=cfg.kind==='classic'?G.revCount:G.cleared, fv=cfg.kind==='classic'?G.flag[y*G.W+x]:0;
   G.opened=[];
   if(c.r){ const rc=G.revCount; G.click(x,y);
@@ -1740,6 +1856,7 @@ function after(prev){
   if(HL&&(G.state!=='play'||G.cell(HL.t[0],HL.t[1]).r)) HL=null;
   if(cfg.tut){ tutCheck(); hud(); draw(); return; }
   if(cfg.challenge){ chalAfter(); hud(); draw(); return; }
+  if(cfg.fd){ fdAfter(); hud(); draw(); return; }
   if(cfg.camp){ campAfter(); hud(); draw(); return; }
   if(cfg.kind==='classic'){
     if(prev==='ready'&&G.state!=='ready'){ statOf(cfg.d).played++; persist(); }
@@ -1835,6 +1952,7 @@ function ovEndless(){ const e=endOf(cfg.d), nb=G.cleared>runBest0&&runBest0>0, R
   <div><b>${R.far}</b><span>Distance</span></div><div><b>${R.ms}</b><span>Milestones</span></div></div>
   ${G.xpPaid?`<div class="xpline">+${G.xpPaid} XP <small>this run</small></div>`:''}${btns('New run')}`); }
 $('#sheet').addEventListener('click',e=>{ const a=e.target.closest('[data-a]')?.dataset.a; if(!a) return;
+  if(a==='fdshare'){ openFdShare(); return; } if(a==='fdstand'){ openStandings(); return; }
   if(a==='again') restart(); else if(a==='view') hideOv(); else if(a==='ana') openAnalysis(); else if(a==='share') openShare(cfg.challenge?` · vs ${cfg.challenge.name||'a friend'}'s ${clock(cfg.challenge.time)}`:''); else if(a==='beg') startClassic('beginner');
   else if(a==='cnext'){ const {ci,li}=cfg.camp; if(li<14) startLevel(ci,li+1); else { campTab=ci+1; startLevel(ci+1,0); } }
   else if(a==='cmap'){ hideOv(); campTab=cfg.camp.ci; show('camp'); }
@@ -1943,7 +2061,7 @@ function chLabel(ch){ const dn=DIFF[DIDX[ch.diff]]?DIFF[DIDX[ch.diff]].name:'Cus
   const rl=ch.dbl?'double':{hex:'hex',wrap:'wrap',knight:'knight'}[ch.mode]; return dn+(rl?' '+RULES[rl].short:'')+(ch.hasMask?' shaped':''); }
 function startChallenge(ch){
   show('game'); ch.label=chLabel(ch); let total=0, two=0, cells=0; for(const v of ch.mines){ total+=v; if(v) cells++; if(v===2) two++; }
-  cfg={kind:'classic',d:DIDX[ch.diff]||'intermediate',challenge:ch,rule:ch.dbl?'double':ch.mode!=='sq'?ch.mode:null}; HL=null; TS=null; anReset(); coach();
+  cfg={kind:'classic',d:DIDX[ch.diff]||'intermediate',challenge:ch,start:ch.start,rule:ch.dbl?'double':ch.mode!=='sq'?ch.mode:null}; HL=null; TS=null; anReset(); coach();
   const g=new Classic(ch.W,ch.H,total,ch.hasMask?ch.mask:null,{mode:ch.mode,dbl:ch.dbl?{cells,doubles:two}:null});
   g.setMines(ch.mines); g.state='play'; g.t0=Date.now(); g.pending=true; G=g;
   recorded=false; pausedAt=0; paused=false; $('#pauseOv').classList.add('hidden'); fitCam(); hideOv(); hud(); render();
@@ -1966,12 +2084,151 @@ function chalAfter(){
       <div class="btns"><button class="primary" data-a="again">Try again</button><button class="ghost" data-a="view">View board</button><button class="ghost" data-a="home">Home</button></div>`),motionOn()?1350:500); }
 }
 
+// ---------- Friends' Board: one shared board a day, results travel as links ----------
+const FD_PEN=15, APP_URL=(location.protocol==='https:'&&!/claude|anthropic|usercontent/.test(location.hostname))?location.origin+location.pathname:'https://allasdair.github.io/sweep/';
+function fdS(){ if(!S.fd) S.fd={}; const F=S.fd;
+  if(!F.pid){ const b=new Uint8Array(6); (crypto.getRandomValues?crypto.getRandomValues(b):b.forEach((_,i)=>b[i]=Math.random()*256|0)); F.pid=[...b].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+  F.days=F.days||{}; F.tiers=F.tiers||{1:{st:0,last:'',tot:0},2:{st:0,last:'',tot:0},3:{st:0,last:'',tot:0}}; return F; }
+const fdDayRec=d=>{ const F=fdS(); return F.days[d]||(F.days[d]={rs:{}}); };
+const FPC={}; const fdPrint=d=>FPC[d]||(FPC[d]=fdBoard(d).fp);
+const fdEff=r=>r.won?r.t+FD_PEN*(r.h||0):Infinity;
+function fdRows(d){ const D=fdS().days[d]; if(!D) return [];
+  const rows=Object.entries(D.rs).map(([pid,r])=>({pid,name:r.n||'Anonymous',won:r.won,t:r.t,h:r.h,me:false}));
+  if(D.me) rows.push({pid:fdS().pid,name:S.name||'You',won:D.me.won,t:D.me.t,h:D.me.h,me:true});
+  rows.sort((a,b)=>(fdEff(a)-fdEff(b))||(a.t-b.t)||a.name.localeCompare(b.name));
+  rows.forEach(r=>{ r.rank=1+rows.filter(o=>fdEff(o)<fdEff(r)).length; }); return rows; }
+function fdPlace(d){ const rows=fdRows(d), me=rows.find(r=>r.me); if(!me) return null;
+  return {rank:me.rank,n:rows.length,beat:rows.some(r=>fdEff(r)>fdEff(me)),won:me.won}; }
+const ord=n=>n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th');
+const dayShort=d=>{ const [y,m,dd]=d.split('-').map(Number); return new Date(y,m-1,dd).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); };
+const addDays=(d,n)=>{ const [y,m,dd]=d.split('-').map(Number), t=new Date(y,m-1,dd+n); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; };
+const prevDay=d=>addDays(d,-1);
+// Placements lock when the day ends. Top 1 counts toward Top 2 and Top 3 too. You must beat at least one friend.
+function fdFinalize(){
+  const F=fdS(), t=today(), got=[], msgs=[];
+  for(const d of Object.keys(F.days).sort()){ const D=F.days[d]; if(d>=t||D.fin) continue;
+    const pl=fdPlace(d); D.fin=pl?{rank:pl.rank,n:pl.n}:{rank:0,n:0};
+    if(!pl) continue;
+    for(const k of [1,2,3]){ const T=F.tiers[k], q=pl.won&&pl.beat&&pl.rank<=k;
+      if(q){ T.st=T.last===prevDay(d)?T.st+1:1; T.last=d; T.tot++;
+        if(award('fd'+k+'d',true)) got.push('fd'+k+'d'); if(T.st>=7&&award('fd'+k+'w',true)) got.push('fd'+k+'w'); if(T.tot>=30&&award('fd'+k+'t',true)) got.push('fd'+k+'t'); }
+      else T.st=0; }
+    msgs.push(`${dayShort(d)}: ${pl.won?ord(pl.rank)+' of '+pl.n:'DNF'}`); }
+  for(const d of Object.keys(F.days)) if(d<addDays(t,-10)) delete F.days[d]; // finalized history is kept in the tier counters
+  if(msgs.length){ persist(); toast(`👥 Friends' Board final · ${msgs.slice(-1)[0]}`); got.forEach(id=>{ const a=ACH.find(a=>a.id===id), r=achRw(id); toast(`🏆 ${a.name}${r?` · ${r} unlocked`:''}`); }); }
+  return got;
+}
+function fdImport(text,quiet){
+  const F=fdS(), codes=allCodes(text,/SWR1\.[A-Za-z0-9_-]+/g), out={add:[],same:0,self:0,late:0,ver:0,bad:0,old:0}, t=today();
+  for(const c of codes){ let r; try{ r=decodeResult(c); }catch(e){ out.bad++; continue; }
+    if(r.pid===F.pid){ out.self++; continue; }
+    if(r.date<addDays(t,-3)||r.date>addDays(t,1)){ out.old++; continue; } // a friend a timezone ahead can be on tomorrow's board
+    let fp; try{ fp=fdPrint(r.date); }catch(e){ out.bad++; continue; }
+    if(fp!==r.fp){ out.ver++; continue; }
+    const D=fdDayRec(r.date); if(D.fin){ out.late++; continue; }
+    const prev=D.rs[r.pid]; if(prev&&prev.t===r.time&&prev.won===r.won){ out.same++; continue; }
+    D.rs[r.pid]={n:r.name||'Anonymous',won:r.won,t:r.time,h:r.hints}; out.add.push(r); }
+  persist();
+  if(!quiet){ const m=[];
+    if(out.add.length) m.push(out.add.length===1?`Added ${out.add[0].name||'a friend'} (${out.add[0].won?fmt(out.add[0].time):'DNF'})`:`Added ${out.add.length} results`);
+    if(out.same) m.push(`${out.same} already added`); if(out.self) m.push('that one\'s yours');
+    if(out.ver) m.push(`${out.ver} from a different game version (ask them to update)`); if(out.late) m.push(`${out.late} arrived after that day locked`);
+    if(out.old) m.push(`${out.old} too old`); if(out.bad||(!codes.length)) m.push(codes.length?`${out.bad} couldn't be read`:'No results found in that text');
+    toast(m.join(' · '),true); }
+  return out;
+}
+function fdMyCode(){ const D=fdS().days[today()]; if(!D||!D.me) return null;
+  return encodeResult({day:fdDay(today()),pid:fdS().pid.match(/../g).map(h=>parseInt(h,16)),won:D.me.won,hints:D.me.h,time:D.me.t,fp:fdPrint(today()),name:S.name||''}); }
+function fdShareText(){ const D=fdS().days[today()], me=D&&D.me; if(!me) return '';
+  const res=me.won?`${clock(me.t)}${me.h?` (+${me.h} hint${me.h>1?'s':''})`:''} ${me.stars!=null?starStr(me.stars):''}`.trim():'💥 DNF';
+  return `Sweep Friends' Board · ${dayShort(today())} · ${res}\nTap to add my time to your board: ${APP_URL}#r=${fdMyCode()}`; }
+function startFD(){
+  const ds=dailyState(), rec=ds.fd;
+  if(rec&&rec.st!=='play'){ openStandings(); return; }
+  if(G&&cfg&&cfg.fd&&cfg.date===ds.date&&G.state==='play'){ show('game'); hud(); return; }
+  let B; try{ B=fdBoard(ds.date); }catch(e){ toast('Couldn\'t build today\'s board. Try again in a moment.',true); return; }
+  show('game'); cfg={kind:'classic',d:'intermediate',daily:true,fd:true,date:ds.date,start:B.start}; HL=null; TS=null; anReset(); coach();
+  if(rec&&rec.save){ G=restoreClassic(rec.save,B.M); G.fdCount=1; } else { G=new Classic(B.W,B.H,B.M); G.setMines(B.mines); G.state='play'; G.pending=true; G.t0=Date.now(); }
+  recorded=false; pausedAt=0; paused=false; $('#pauseOv').classList.add('hidden'); fitCam(); hideOv(); hud(); render();
+  if(!rec) toast('Same board for every player today. Start on the glowing tile. One attempt!',true);
+}
+function fdAfter(){
+  const D=fdDayRec(cfg.date), ds=dailyState(), live=cfg.date===ds.date, st=statOf('intermediate');
+  if(G.state==='play'&&G.revCount>0&&!G.fdCount){ G.fdCount=1; st.played++; }
+  if(G.state==='won'&&!recorded){ recorded=true; const t=Math.round(G.elapsed()*10)/10, h=G.hintsUsed||0, stars=winStars();
+    if(live){ D.me={won:1,t,h,stars}; ds.fd={st:'won',t}; }
+    st.won++; S.streak++; S.wins++; S.bestStreak=Math.max(S.bestStreak,S.streak); const got=[], A=id=>{ if(award(id,true)) got.push(id); };
+    A('first'); if(S.streak>=5) A('streak'); if(S.wins>=25) A('veteran'); if(G.flagsPlaced===0&&!G.autoFlagged) A('pacifist');
+    logGame(true); const wk=weekCheck(winSummary()); if(wk) wk.got.forEach(id=>got.push(id));
+    const xp=20+(wk?wk.xp:0), ups=grantXP(xp,true); persist(); buzz(25);
+    const mo=motionOn(), ws=mo?Math.min(lastRipple,700)*.6+120:0; anWin(ws); setTimeout(()=>sfx('win'),ws); setTimeout(winFx,ws+200);
+    if(ups.length) setTimeout(()=>{ sfx('level'); levelBurst(); },ws+650);
+    later(()=>ovFd(true,{t,h,xp,ups,got,wk}),mo?ws+1250:380); }
+  else if(G.state==='lost'&&!recorded){ recorded=true; const t=Math.round(G.elapsed()*10)/10;
+    if(live){ D.me={won:0,t,h:G.hintsUsed||0}; ds.fd={st:'lost'}; } S.streak=0; logGame(false); persist(); buzz([40,40,80]); later(()=>ovFd(false,{t}),motionOn()?1350:500); }
+  else saveDaily();
+}
+function placeLine(d){ const pl=fdPlace(d); if(!pl) return '';
+  if(pl.n<2) return 'No friends\' results yet. Share yours and ask them to share back.';
+  return `${pl.won?`You're <b>${ord(pl.rank)}</b> of ${pl.n}`:`DNF · ${pl.n} player${pl.n>1?'s':''}`}${d===today()?' so far · locks at midnight':''}`; }
+function ovFd(won,r){
+  sheet(`<h2>${won?'Cleared':'Boom'}</h2><div class="sub">Friends' Board · ${dayShort(today())}${won&&r.h?` · +${r.h*FD_PEN}s hint penalty`:''}</div>
+  <div class="stats"><div><b>${won?fmt(r.t):'DNF'}</b><span>${won?'Time':'Result'}</span></div><div><b>${won&&r.h?fmt(r.t+r.h*FD_PEN):won?fmt(r.t):'—'}</b><span>Ranked time</span></div></div>
+  ${won?`<div class="xpline">+${r.xp} XP${r.wk?'<small>incl. weekly</small>':''}</div><div class="starline">${starStr(winStars())}</div>`:''}
+  <div class="sub" style="margin:-2px 0 12px">${placeLine(today())}</div>
+  ${won?`${weekLine(r.wk)}${r.ups.map(lvlLine).join('')}${r.got.map(unl).join('')}`:''}
+  <div class="btns"><button class="primary" data-a="fdshare">${ICON.share} Share with friends</button><button class="ghost" data-a="fdstand">Standings</button>${won?'<button class="ghost" data-a="ana">Analysis</button>':''}<button class="ghost" data-a="home">Home</button></div>`); }
+function openFdShare(){
+  const need=!S.name;
+  sheet2(`<h2>Share your result</h2><div class="sub">Friends who tap your link get your time added to their board. Ask them to send theirs back.</div>
+    <div class="label" style="margin:0 2px 6px;text-align:left">Your name on friends' boards</div><input class="code nm" id="fdName" maxlength="16" placeholder="Pick a name" value="${(S.name||'').replace(/"/g,'&quot;')}">
+    <textarea class="code" id="fdOut" readonly></textarea>
+    <div class="btns" style="margin-top:8px"><button class="primary" id="fdGo">Share</button><button class="ghost" data-close>Close</button></div>
+    <div class="sub" style="font-size:12px;margin:6px 0 0">The link holds your time, your name and a random player ID. Nothing else about you, and no account.</div>`);
+  const upd=()=>{ $('#fdOut').value=fdShareText(); }; upd();
+  $('#fdName').oninput=()=>{ S.name=cleanName($('#fdName').value); persist(); upd(); };
+  $('#fdGo').onclick=()=>{ if(!S.name){ toast('Add a name first so friends know who you are.',true); $('#fdName').focus(); return; } shareText(fdShareText()); };
+  if(need) setTimeout(()=>$('#fdName').focus(),200);
+}
+let fdView=null;
+function openStandings(d){
+  const t=today(), F=fdS(); fdFinalize(); d=d||fdView||t; fdView=null; const D=F.days[d], played=!!(D&&D.me), isToday=d===t, others=D?Object.keys(D.rs).length:0;
+  const y=prevDay(t), hasY=!!(F.days[y]&&(F.days[y].me||Object.keys(F.days[y].rs).length));
+  const rows=fdRows(d), hide=isToday&&!played;
+  const list=!rows.length?'<div class="sub" style="margin:8px 0 12px">No results for this day.</div>'
+    :hide?`<div class="sub" style="margin:8px 0 12px">${others} friend${others===1?' has':'s have'} played today. Play to see their times.</div>`
+    :`<div class="lb">${rows.map(r=>`<div class="lbr${r.me?' me':''}"><span class="lbk">${r.won?r.rank:'–'}</span><span class="lbn">${r.name.replace(/</g,'&lt;')}${r.me?' <small>(you)</small>':''}</span><span class="lbt">${r.won?fmt(r.t+FD_PEN*(r.h||0)):'DNF'}${r.won&&r.h?`<small>+${r.h} hint${r.h>1?'s':''}</small>`:''}</span></div>`).join('')}</div>`;
+  const T=F.tiers, prog=[[1,'Top 1'],[2,'Top 2'],[3,'Top 3']].map(([k,n])=>`<div class="fdp"><b>${n}</b><span>${T[k].last===prevDay(t)||T[k].last===t?T[k].st:0}/7 in a row</span><span>${Math.min(T[k].tot,30)}/30 total</span></div>`).join('');
+  sheet2(`<h2>Friends' Board</h2>
+    ${hasY?`<div class="seg mini" style="margin:2px 0 10px"><button data-fdd="${t}" class="${isToday?'on':''}">Today</button><button data-fdd="${y}" class="${d===y?'on':''}">Yesterday${F.days[y]&&F.days[y].fin?' · final':''}</button></div>`:''}
+    <div class="sub">${dayShort(d)}${isToday?' · locks at midnight':' · final'}${played?' · '+placeLine(d).replace(/<\/?b>/g,'').replace(/ so far · locks at midnight/,''):''}</div>
+    ${list}
+    <div class="label" style="margin:4px 2px 6px;text-align:left">Add friends' results</div>
+    <textarea class="code" id="fdIn" placeholder="Paste a friend's message, or a whole group chat. Every result link in it gets added."></textarea>
+    <div class="btns" style="margin-top:8px">${isToday&&!played?'<button class="primary" id="fdPlay">Play today\'s board</button>':''}<button class="${isToday&&!played?'ghost':'primary'}" id="fdAdd">Add results</button>${played&&isToday?'<button class="ghost" id="fdShare">Share my result</button>':''}<button class="ghost" data-close>Close</button></div>
+    <div class="label" style="margin:14px 2px 6px;text-align:left">Placement progress</div><div class="fdps">${prog}</div>
+    <div class="sub" style="font-size:12px;margin:6px 0 0;text-align:left">Placements lock at midnight. To count, you must beat at least one friend. A 1st place also counts toward Top 2 and Top 3. Each hint adds ${FD_PEN}s.</div>`);
+  $$('#sheet2 [data-fdd]').forEach(b=>b.onclick=()=>openStandings(b.dataset.fdd));
+  $('#fdAdd').onclick=()=>{ const v=$('#fdIn').value; if(!v.trim()){ $('#fdIn').focus(); return; } fdImport(v); fdView=d; openStandings(); renderHome(); };
+  const pb=$('#fdPlay'); if(pb) pb.onclick=()=>{ hideOv2(); startFD(); };
+  const sb=$('#fdShare'); if(sb) sb.onclick=openFdShare;
+}
+function fdCardHTML(){ const t=today(), D=fdS().days[t], others=D?Object.keys(D.rs).length:0, me=D&&D.me, pl=me?fdPlace(t):null, rec=dailyState().fd;
+  const sub=me?(pl.n>1?`You: ${me.won?ord(pl.rank)+' of '+pl.n+' · '+fmt(me.t):'DNF'}`:`${me.won?fmt(me.t):'DNF'} · share it so friends can compare`)
+    :rec&&rec.st==='play'?'In progress · tap to continue':`Same board for everyone today${others?` · ${others} friend${others>1?'s':''} played`:''}`;
+  return `<div class="ico">${ICON.people}</div><div class="grow"><div class="t">Today's shared board</div><div class="s">${sub}</div></div><div class="r"><b>${me?(me.won&&pl.n>1?ord(pl.rank):'✓'):'+20'}</b><span>${me?'Place':'XP'}</span></div>`; }
+// result and challenge links: #r=SWR1... adds a friend's result, #c=SWC1... opens a challenge
+function handleLink(){ const h=decodeURIComponent(location.hash||''); if(!/SWR1\.|SWC1\./.test(h)) return;
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+  if(/SWR1\./.test(h)){ fdImport(h); fdView=null; setTimeout(()=>openStandings(),300); } else setTimeout(()=>openChallengeEntry(h.match(/SWC1\.[A-Za-z0-9_-]+/)[0]),300); }
+addEventListener('hashchange',handleLink);
+
 // ---------- hints in play ----------
 let HL=null, PEEK=null;
 function overlay(){
   const o=HL?{glow:[HL.t],mark:HL.from,mines:HL.mines}:{glow:[],mark:[],mines:[]};
   if(PEEK&&G&&PEEK.g===G&&performance.now()<PEEK.until){ o.peek=PEEK.cells; return o; }
-  if(cfg.challenge&&G.revCount===0&&!HL){ const i=cfg.challenge.start; o.glow=[[i%G.W,Math.floor(i/G.W)]]; }
+  if(cfg.start!=null&&G.revCount===0&&!HL){ const i=cfg.start; o.glow=[[i%G.W,Math.floor(i/G.W)]]; }
   if(cfg.tut&&TS&&!HL){ const st=TUT.steps[TS.i]; o.mark=st.mark||[]; o.glow=st.glow||(st.glowLate&&TS.miss?st.cells:[]); }
   return (o.glow.length||o.mark.length)?o:null;
 }
@@ -2218,7 +2475,7 @@ async function openBackup(){
 function hud(){
   if(!G) return; const tm=clock(shownEl());
   const cl=cfg.camp?CAMPS[cfg.camp.ci].levels[cfg.camp.li]:null, tm2=G.pending?'0:00':tm;
-  $('#hudPill').innerHTML=(cfg.tut?'<span class="tag">Tutorial</span>':cfg.camp?`<span class="tag">${lvTag(cfg.camp.ci,cfg.camp.li)}</span>`:cfg.daily?'<span class="tag">Daily</span>':cfg.challenge?'<span class="tag">Challenge</span>':cfg.week?'<span class="tag">Weekly</span>':cfg.rule?`<span class="tag">${RULES[cfg.rule].short}</span>`:'')+(cfg.kind==='classic'
+  $('#hudPill').innerHTML=(cfg.tut?'<span class="tag">Tutorial</span>':cfg.camp?`<span class="tag">${lvTag(cfg.camp.ci,cfg.camp.li)}</span>`:cfg.fd?'<span class="tag">Friends</span>':cfg.daily?'<span class="tag">Daily</span>':cfg.challenge?'<span class="tag">Challenge</span>':cfg.week?'<span class="tag">Weekly</span>':cfg.rule?`<span class="tag">${RULES[cfg.rule].short}</span>`:'')+(cfg.kind==='classic'
     ?`<span>${ICON.mine}${G.total-G.flagCount}</span><span>${ICON.clock}${tm2}${cl&&!cl.twist?`<small>/${clock(cfg.camp.par)}</small>`:''}</span>`
     :`<span>${ICON.map}${G.cleared.toLocaleString()}</span><span>${ICON.compass}${(G.run||{far:0}).far}</span><span>${ICON.clock}${tm}</span>`);
   const mb=$('#mbar'), wantBar=cfg.kind==='endless';
@@ -2324,7 +2581,7 @@ function renderHome(){
   const nx=nextLevel(), ts=totalStars();
   $('#campCard').innerHTML=`<div class="ico">${ICON.route}</div><div><div class="t">${nx?CAMPS[nx[0]].name+' campaign':'All campaigns cleared'}</div><div class="s">${nx?`Next: Level ${nx[1]+1} · ${CAMPS[nx[0]].levels[nx[1]].n}`:'Go back for any stars you missed.'}</div></div><div class="r"><b>${ts}<small>/135</small></b><span>Stars</span></div>`;
   $('#campCard').onclick=()=>{ campTab=null; show('camp'); };
-  const resumeTxt=G&&G.state==='play'?cfg.tut?'Tutorial':cfg.camp?`Campaign · ${lvTag(cfg.camp.ci,cfg.camp.li)} · ${CAMPS[cfg.camp.ci].levels[cfg.camp.li].n}`:(cfg.daily?'Daily · ':cfg.challenge?'Challenge · ':'')+(cfg.kind==='classic'?boardName()+' · '+clock(G.elapsed()):'Endless · '+DENS[cfg.d].name+' · '+G.cleared.toLocaleString()+' cells'):'';
+  const resumeTxt=G&&G.state==='play'?cfg.tut?'Tutorial':cfg.camp?`Campaign · ${lvTag(cfg.camp.ci,cfg.camp.li)} · ${CAMPS[cfg.camp.ci].levels[cfg.camp.li].n}`:(cfg.fd?'Friends\' Board · ':cfg.daily?'Daily · ':cfg.challenge?'Challenge · ':'')+(cfg.kind==='classic'?boardName()+' · '+clock(G.elapsed()):'Endless · '+DENS[cfg.d].name+' · '+G.cleared.toLocaleString()+' cells'):'';
   $('#resume').innerHTML=resumeTxt?`<button class="card" id="resumeBtn"><div class="ico">${ICON.play}</div><div><div class="t">Resume</div><div class="s">${resumeTxt}</div></div></button>`:'';
   const rb=$('#resumeBtn'); if(rb) rb.onclick=()=>{ show('game'); hud(); };
   const ds=dailyState();
@@ -2344,6 +2601,7 @@ function renderHome(){
   $$('[data-play]').forEach(b=>b.onclick=()=>openRules(b.dataset.play));
   $('#chalCard').innerHTML=`<div class="ico">${ICON.duel}</div><div><div class="t">Friend challenge</div><div class="s">Paste a code from a friend and race their time.</div></div>`;
   $('#chalCard').onclick=()=>openChallengeEntry();
+  $('#fdCard').innerHTML=fdCardHTML(); $('#fdCard').onclick=()=>{ const me=fdS().days[today()]; if(me&&me.me) openStandings(); else startFD(); };
   const W=thisWeek(), wd=weekDone(); $('#weekLeft').textContent=weekLeft();
   $('#weekCard').innerHTML=`<div class="ico ${wd?'gold':''}">${ICON.badge}</div><div class="grow"><div class="t">${W.name}</div><div class="s">${W.desc}</div></div><div class="r"><b>${wd?'✓':'+40'}</b><span>${wd?'Badge':'XP'}</span></div>`;
   $('#weekCard').classList.toggle('done',wd); $('#weekCard').onclick=()=>{ if(wd){ toast(`Badge earned. Next week brings a new rule. You have ${S.wbadges}.`,true); return; } W.go(); if(cfg) cfg.week=true; hud(); };
@@ -2502,7 +2760,7 @@ if(darkMQ){ const f=()=>{ if(S.appearance==='system'){ applyTheme(); if(cur==='s
 $('#pauseBtn').innerHTML=ICON.pause; $('#back').innerHTML=ICON.back; $('#restart').innerHTML=ICON.restart; $('#tDig').innerHTML=ICON.dig; $('#tFlag').innerHTML=ICON.flag;
 $('#homeTheme').innerHTML=ICON.palette; $('#endIco').innerHTML=ICON.map; $('#icoT').innerHTML=ICON.palette; $('#icoA').innerHTML=ICON.trophy;
 $$('.topbar .iconbtn').forEach(b=>b.innerHTML=ICON.back);
-applyTheme(); renderHome();
+applyTheme(); fdFinalize(); renderHome(); handleLink();
 if(document.fonts) document.fonts.ready.then(()=>{ render(); if(cur==='style') renderStyle(); });
 </script>
 <script>

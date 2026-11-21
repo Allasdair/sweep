@@ -11,6 +11,7 @@ An ad-free, no-guess minesweeper. Every board can be cleared with logic alone. T
 - **Weekly challenge:** a rotating rule each week, with a badge for clearing it.
 - **Endless:** an ever-expanding map with milestones and expeditions.
 - **Post-game analysis:** 3BV, efficiency, where you hesitated and any guesses.
+- **Friends' Board:** one shared board a day, identical for every player. Share a link and friends who tap it get your time on their standings, with no server or account. Placements lock at midnight and earn medal flags, metal boards and a Pearl set for top-3, top-2 and 1st finishes.
 - **Challenge codes:** send a friend your exact board and race their time, with no server or account.
 - **Progression:** levels, achievements and 60+ cosmetic unlocks. Everything is earned by playing; nothing is for sale.
 - **Accessibility:** colourblind-safe numbers, left-handed controls, a tap magnifier and reduced motion.

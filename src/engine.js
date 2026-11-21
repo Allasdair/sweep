@@ -185,17 +185,17 @@ function genClassic(W,H,total,start,rng=Math.random,opts={}){
   const cand=[]; for(let i=0;i<N;i++) if(!zone[i]&&(!mask||mask[i])) cand.push(i);
   const place=()=>{ const m=new Uint8Array(N), c=cand.slice();
     for(let k=0;k<cellsN;k++){ const r=k+(rng()*(c.length-k)|0); [c[k],c[r]]=[c[r],c[k]]; m[c[k]]=dbl&&k<dbl.doubles?2:1; } return m; };
-  let mines=place(), fallback=null; const t0=Date.now(), soft=budget*.6;
+  let mines=place(), fallback=null; const t0=Date.now(), soft=budget*.6, steps=opts.steps||0;
   for(let it=0;;it++){
     const r=solve(N,nb,mines,start,total,mask,opts);
     if(r.ok){
       const good=(!opts.accept||opts.accept(r.stats))&&(!opts.snap||r.snap);
       if(good) return {mines,tries:it,ok:true,stats:r.stats,snap:r.snap};
       if(!opts.snap&&!fallback) fallback={mines:mines.slice(),stats:r.stats};
-      if(Date.now()-t0>soft&&fallback) return {mines:fallback.mines,tries:it,ok:true,stats:fallback.stats,graded:false};
+      if((steps?it>=steps*.6:Date.now()-t0>soft)&&fallback) return {mines:fallback.mines,tries:it,ok:true,stats:fallback.stats,graded:false};
       mines=place(); continue;
     }
-    if(Date.now()-t0>budget) return fallback?{mines:fallback.mines,tries:it,ok:true,stats:fallback.stats,graded:false}:{mines,tries:it,ok:false};
+    if(steps?it>=steps:Date.now()-t0>budget) return fallback?{mines:fallback.mines,tries:it,ok:true,stats:fallback.stats,graded:false}:{mines,tries:it,ok:false};
     if(it%50===49){ mines=place(); continue; }
     const fr=[], inr=[];
     for(let i=0;i<N;i++){ if(r.rev[i]||(mask&&!mask[i])) continue; let adj=false;
@@ -504,6 +504,49 @@ const toB64U=b=>{ let s=''; for(let i=0;i<b.length;i+=3){ const n=(b[i]<<16)|((b
   s+=B64U[n>>18&63]+B64U[n>>12&63]+(i+1<b.length?B64U[n>>6&63]:'')+(i+2<b.length?B64U[n&63]:''); } return s; };
 const fromB64U=s=>{ const out=[]; let buf=0,bits=0; for(const ch of s){ const v=B64U.indexOf(ch); if(v<0) throw new Error('char'); buf=(buf<<6)|v; bits+=6; if(bits>=8){ bits-=8; out.push((buf>>bits)&255); } } return Uint8Array.from(out); };
 const MODES=['sq','hex','wrap','knight'];
+const cleanName=t=>[...String(t).replace(/[\u0000-\u001f\u007f<>&"'`]/g,'')].slice(0,16).join('').trim(); // names are display-only text
+
+// ---------- Friends' Board: the same board on every device for a given date ----------
+// Seeded from the date alone and generated with a step limit instead of a time limit, so a slow phone
+// and a fast one build the identical board. Results carry a fingerprint of the board, so a friend on a
+// different game version is detected instead of being compared on a different board.
+const FD_VER=1, FD_W=16, FD_H=16, FD_M=40, EPOCH=Date.UTC(2024,0,1);
+function seedRng(str){ // cyrb128 -> sfc32
+  let h1=1779033703,h2=3144134277,h3=1013904242,h4=2773480762;
+  for(let i=0;i<str.length;i++){ const k=str.charCodeAt(i); h1=h2^Math.imul(h1^k,597399067); h2=h3^Math.imul(h2^k,2869860233); h3=h4^Math.imul(h3^k,951274213); h4=h1^Math.imul(h4^k,2716044813); }
+  h1=Math.imul(h3^(h1>>>18),597399067); h2=Math.imul(h4^(h2>>>22),2869860233); h3=Math.imul(h1^(h3>>>17),951274213); h4=Math.imul(h2^(h4>>>19),2716044813);
+  let a=(h1^h2^h3^h4)>>>0, b=(h2^h1)>>>0, c=(h3^h1)>>>0, d=(h4^h1)>>>0;
+  const r=()=>{ a>>>=0; b>>>=0; c>>>=0; d>>>=0; let t=(a+b)|0; a=b^(b>>>9); b=(c+(c<<3))|0; c=(c<<21)|(c>>>11); d=(d+1)|0; t=(t+d)|0; c=(c+t)|0; return (t>>>0)/4294967296; };
+  for(let i=0;i<15;i++) r(); return r;
+}
+function boardPrint(W,H,mines,start){ let h=2166136261; const add=v=>{ h^=v&255; h=Math.imul(h,16777619); };
+  add(W); add(H); add(start&255); add(start>>8); for(let i=0;i<mines.length;i++) add(mines[i]); return (h>>>0).toString(16).padStart(8,'0'); }
+const fdDay=date=>{ const [y,m,d]=date.split('-').map(Number); return Math.round((Date.UTC(y,m-1,d)-EPOCH)/864e5); };
+const fdDate=n=>{ const t=new Date(EPOCH+n*864e5); return t.getUTCFullYear()+'-'+String(t.getUTCMonth()+1).padStart(2,'0')+'-'+String(t.getUTCDate()).padStart(2,'0'); };
+function fdBoard(date){
+  for(let a=0;a<20;a++){ const rng=seedRng(`SWFD${FD_VER}|${date}|${a}`);
+    const sx=4+(rng()*8|0), sy=4+(rng()*8|0), start=sy*FD_W+sx;
+    const g=genClassic(FD_W,FD_H,FD_M,start,rng,{steps:8000});
+    if(g.ok) return {W:FD_W,H:FD_H,M:FD_M,start,mines:g.mines,fp:boardPrint(FD_W,FD_H,g.mines,start)}; }
+  throw new Error('fd generation failed');
+}
+// Result code: SWR1.<base64url> = version, day, player id (6 bytes, random, anonymous), won+hints, time, board print, name
+function encodeResult(r){
+  const b=[1, r.day&255, r.day>>8, ...r.pid, (r.won?1:0)|(Math.min(127,r.hints|0)<<1)];
+  const t=Math.max(0,Math.min(0xffffff,Math.round(r.time*10))); b.push(t&255,(t>>8)&255,t>>16);
+  for(let i=0;i<8;i+=2) b.push(parseInt(r.fp.substr(i,2),16));
+  const nm=new TextEncoder().encode(cleanName(r.name||'')); b.push(nm.length,...nm);
+  return 'SWR1.'+toB64U(Uint8Array.from(b));
+}
+function decodeResult(code){
+  const m=String(code).match(/SWR1\.([A-Za-z0-9_-]+)/); if(!m) throw new Error('nocode');
+  const b=fromB64U(m[1]); if(b[0]!==1||b.length<18) throw new Error('version');
+  let p=1; const day=b[p]|(b[p+1]<<8); p+=2; const pid=[...b.slice(p,p+6)]; p+=6; const st=b[p++];
+  const time=(b[p]|(b[p+1]<<8)|(b[p+2]<<16))/10; p+=3; const fp=[...b.slice(p,p+4)].map(v=>v.toString(16).padStart(2,'0')).join(''); p+=4;
+  const nl=b[p++]||0, name=cleanName(new TextDecoder().decode(b.slice(p,p+nl)));
+  return {day,date:fdDate(day),pid:pid.map(v=>v.toString(16).padStart(2,'0')).join(''),won:!!(st&1),hints:st>>1,time,fp,name};
+}
+const allCodes=(text,re)=>[...String(text).matchAll(re)].map(m=>m[0]);
 function encodeChallenge(g,meta){
   const b=[1, MODES.indexOf(g.mode)|(g.dbl?4:0)|(g.NP<g.N?8:0), meta.diff|0, g.W, g.H, meta.start&255, meta.start>>8,
     Math.min(65535,Math.round(meta.time*10))&255, Math.min(65535,Math.round(meta.time*10))>>8, meta.hints|0, meta.src|0, meta.lv|0];
@@ -517,7 +560,7 @@ function decodeChallenge(text){
   const m=String(text).match(/SWC1\.([A-Za-z0-9_-]+)/); if(!m) throw new Error('nocode');
   const b=fromB64U(m[1]); let p=0; const ver=b[p++]; if(ver!==1) throw new Error('version');
   const fl=b[p++], diff=b[p++], W=b[p++], H=b[p++], start=b[p++]|(b[p++]<<8), time=(b[p++]|(b[p++]<<8))/10, hints=b[p++], src=b[p++], lv=b[p++];
-  const nl=b[p++], name=[...new TextDecoder().decode(b.slice(p,p+nl)).replace(/[\u0000-\u001f\u007f<>&"'`]/g,'')].slice(0,16).join('').trim(); p+=nl; // names are display-only text
+  const nl=b[p++], name=cleanName(new TextDecoder().decode(b.slice(p,p+nl))); p+=nl;
   const N=W*H, rd=(()=>{ let bi=0; return ()=>{ const v=(b[p+(bi>>3)]>>(7-(bi&7)))&1; bi++; return v; }; })();
   if(!W||!H||N>4000) throw new Error('size');
   const mode=MODES[fl&3], dbl=!!(fl&4), hasMask=!!(fl&8);
@@ -526,4 +569,4 @@ function decodeChallenge(text){
   if(start>=N||!mask[start]||mines[start]) throw new Error('start');
   return {mode,dbl,hasMask,mask,mines,W,H,diff,start,time,hints,src,lv,name};
 }
-if(typeof module!=='undefined') module.exports={deduce,genClassic,classicSolve,makeNb,Classic,Endless,K,KX,KY,nbK,classicHint,endlessHint,countNums,shapeMask,SHAPES,SHAPE_FILL,makePuzzle,makeNb,dblSolve,bbbv,analyze,classify,encodeChallenge,decodeChallenge};
+if(typeof module!=='undefined') module.exports={deduce,genClassic,classicSolve,makeNb,Classic,Endless,K,KX,KY,nbK,classicHint,endlessHint,countNums,shapeMask,SHAPES,SHAPE_FILL,makePuzzle,makeNb,dblSolve,bbbv,analyze,classify,encodeChallenge,decodeChallenge,fdBoard,fdDay,fdDate,encodeResult,decodeResult,seedRng,boardPrint,allCodes,cleanName};
