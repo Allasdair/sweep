@@ -546,6 +546,32 @@ function decodeResult(code){
   const nl=b[p++]||0, name=cleanName(new TextDecoder().decode(b.slice(p,p+nl)));
   return {day,date:fdDate(day),pid:pid.map(v=>v.toString(16).padStart(2,'0')).join(''),won:!!(st&1),hints:st>>1,time,fp,name};
 }
+// ---------- League: League 0 is November 2026, then +1 every calendar month (local time) ----------
+const lgNo=date=>{ const [y,m]=date.split('-').map(Number); return (y-2026)*12+(m-11); };
+const lgMonth=n=>{ const t=10+n; return [2026+Math.floor(t/12),((t%12)+12)%12+1]; };
+const lgDate=(n,day)=>{ const [y,m]=lgMonth(n); return `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`; };
+const lgLen=n=>{ const [y,m]=lgMonth(n); return new Date(y,m,0).getDate(); };
+// Season code: SWL1.<base64url> = version, season, player id, last season's rank, fingerprint of one played round,
+// a bitmask of rounds played, then won+hints and time for each played round, then the name.
+function encodeSeason(r){
+  const b=[1, r.season&255, r.season>>8, ...r.pid, r.prev|0, r.fpDay|0];
+  for(let i=0;i<8;i+=2) b.push(r.fp?parseInt(r.fp.substr(i,2),16):0);
+  const days=Object.keys(r.days).map(Number).filter(d=>d>=1&&d<=31).sort((a,b)=>a-b); let mask=0; for(const d of days) mask|=1<<(d-1);
+  b.push(mask&255,(mask>>>8)&255,(mask>>>16)&255,(mask>>>24)&255);
+  for(const d of days){ const x=r.days[d], t=Math.max(0,Math.min(65535,Math.round(x.t*10))); b.push((x.won?1:0)|(Math.min(127,x.h|0)<<1),t&255,t>>8); }
+  const nm=new TextEncoder().encode(cleanName(r.name||'')); b.push(nm.length,...nm);
+  return 'SWL1.'+toB64U(Uint8Array.from(b));
+}
+function decodeSeason(code){
+  const m=String(code).match(/SWL1\.([A-Za-z0-9_-]+)/); if(!m) throw new Error('nocode');
+  const b=fromB64U(m[1]); if(b[0]!==1||b.length<20) throw new Error('version');
+  let p=1; const season=b[p]|(b[p+1]<<8); p+=2; const pid=[...b.slice(p,p+6)].map(v=>v.toString(16).padStart(2,'0')).join(''); p+=6;
+  const prev=b[p++], fpDay=b[p++], fp=[...b.slice(p,p+4)].map(v=>v.toString(16).padStart(2,'0')).join(''); p+=4;
+  const mask=(b[p]|(b[p+1]<<8)|(b[p+2]<<16)|(b[p+3]<<24))>>>0; p+=4; const days={};
+  for(let d=1;d<=31;d++) if(mask&(1<<(d-1))){ if(p+3>b.length) throw new Error('short'); const st=b[p]; days[d]={won:!!(st&1),h:st>>1,t:(b[p+1]|(b[p+2]<<8))/10}; p+=3; }
+  const nl=b[p++]||0, name=cleanName(new TextDecoder().decode(b.slice(p,p+nl)));
+  return {season,pid,prev,fpDay,fp,days,name};
+}
 const allCodes=(text,re)=>[...String(text).matchAll(re)].map(m=>m[0]);
 function encodeChallenge(g,meta){
   const b=[1, MODES.indexOf(g.mode)|(g.dbl?4:0)|(g.NP<g.N?8:0), meta.diff|0, g.W, g.H, meta.start&255, meta.start>>8,
@@ -569,4 +595,4 @@ function decodeChallenge(text){
   if(start>=N||!mask[start]||mines[start]) throw new Error('start');
   return {mode,dbl,hasMask,mask,mines,W,H,diff,start,time,hints,src,lv,name};
 }
-if(typeof module!=='undefined') module.exports={deduce,genClassic,classicSolve,makeNb,Classic,Endless,K,KX,KY,nbK,classicHint,endlessHint,countNums,shapeMask,SHAPES,SHAPE_FILL,makePuzzle,makeNb,dblSolve,bbbv,analyze,classify,encodeChallenge,decodeChallenge,fdBoard,fdDay,fdDate,encodeResult,decodeResult,seedRng,boardPrint,allCodes,cleanName};
+if(typeof module!=='undefined') module.exports={deduce,genClassic,classicSolve,makeNb,Classic,Endless,K,KX,KY,nbK,classicHint,endlessHint,countNums,shapeMask,SHAPES,SHAPE_FILL,makePuzzle,makeNb,dblSolve,bbbv,analyze,classify,encodeChallenge,decodeChallenge,fdBoard,fdDay,fdDate,encodeResult,decodeResult,seedRng,boardPrint,allCodes,cleanName,lgNo,lgMonth,lgDate,lgLen,encodeSeason,decodeSeason};
