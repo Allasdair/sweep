@@ -25,6 +25,8 @@ Open the link above, then:
 Progress is stored only on your device. To move it, use **Settings → Backup & restore**.
 
 ## Privacy
+Full policy: [allasdair.github.io/sweep/privacy.html](https://allasdair.github.io/sweep/privacy.html)
+
 The game makes no network requests beyond loading its own files: no analytics, no trackers and no third-party fonts or CDNs. A Content Security Policy blocks connections to any other site. Challenge codes contain only the board, your time and an optional name you choose.
 
 ## Build
@@ -35,12 +37,21 @@ python3 build.py            # rebuilds docs/ (the site GitHub Pages serves)
 python3 build.py --single   # dist/sweep.html, one self-contained file
 ```
 
+Run the tests (Node 18+, no installs needed):
+
+```sh
+node tests/run.js           # generation, no-guess solving, variants, all 45 campaign levels, league boards, codes
+```
+
+The league tests pin "golden" board fingerprints. If one fails, the shared daily board changed, so players on different versions would get different boards. Only change them together with a deliberate generator version bump.
+
 | Path | What it is |
 |---|---|
 | `src/app.html` | UI, rendering, sound, progression |
 | `src/engine.js` | Board engine: generation, no-guess solver, hints, rule variants, analysis, challenge codes |
 | `src/camp.js` | Campaign level recipes |
 | `web/` | Web-app shell: manifest, service worker template, bundled fonts, icons (`icons.js` renders them) |
+| `tests/` | Dependency-free Node tests (`node tests/run.js`) |
 | `docs/` | Built site. Don't edit it by hand; run `build.py` |
 
 ## How it was made

@@ -9,7 +9,7 @@ import re, shutil, os, sys, hashlib
 root=os.path.dirname(os.path.abspath(__file__)); src=os.path.join(root,'src'); web=os.path.join(root,'web')
 rd=lambda *p: open(os.path.join(*p),encoding='utf-8').read()
 html=rd(src,'app.html').replace('/*ENGINE*/',rd(src,'engine.js')+'\n'+rd(src,'camp.js'))
-ver=re.search(r'Sweep v([\d.]+)',html).group(1)
+ver=re.search(r"VERSION='([\d.]+)'",html).group(1)
 
 if '--single' in sys.argv:
     os.makedirs(os.path.join(root,'dist'),exist_ok=True)
@@ -38,7 +38,7 @@ out=os.path.join(root,'docs')
 if os.path.exists(out): shutil.rmtree(out)
 os.makedirs(out)
 open(os.path.join(out,'index.html'),'w',encoding='utf-8').write(html)
-for f in ['manifest.webmanifest','fonts.css']: shutil.copy(os.path.join(web,f),out)
+for f in ['manifest.webmanifest','fonts.css','privacy.html']: shutil.copy(os.path.join(web,f),out)
 for d in ['fonts','icons']: shutil.copytree(os.path.join(web,d),os.path.join(out,d))
 open(os.path.join(out,'sw.js'),'w').write(rd(web,'sw.template.js').replace('__VERSION__',f'sweep-{ver}-{h}'))
 open(os.path.join(out,'.nojekyll'),'w').write('')

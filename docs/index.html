@@ -143,6 +143,10 @@ td:first-child,th:first-child{text-align:left;font-weight:600}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,-160%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:16px;font-weight:600;font-size:14px;transition:transform .4s cubic-bezier(.2,.9,.3,1.15);z-index:9;width:max-content;max-width:90vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 #toast.on{transform:translate(-50%,0)}
 #ov2{position:fixed;z-index:6}
+.nudge{align-items:flex-start}.nudge .nb,.filec .nb{display:flex;gap:8px;margin-top:10px}
+button.sm{padding:9px 14px;font-size:13.5px;min-width:0;width:auto;margin:0}
+.filec{margin:4px 0 12px;align-items:flex-start;text-align:left}
+ul.news{margin:0 0 4px;padding:0 0 0 18px;text-align:left;font-size:14px;line-height:1.45}ul.news li{margin:0 0 7px}ul.news b{font-weight:700}
 .lb{margin:6px 0 12px;display:flex;flex-direction:column;gap:4px}
 .lbr{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:var(--bg);text-align:left;font-size:14.5px}
 .lbr.me{box-shadow:inset 0 0 0 2px var(--accent)}.lbk{font-weight:800;text-align:center}.lbn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbn small{color:var(--sub)}
@@ -219,6 +223,7 @@ div.srow{cursor:default}
     <button class="iconbtn" data-go="style" aria-label="Style" id="homeTheme"></button></div>
   <button class="card lvl" data-go="awards" id="lvlCard"></button>
   <div id="tutCard"></div>
+  <div id="bkNudge"></div>
   <div id="resume"></div>
   <div class="label">Campaign</div>
   <button class="card" id="campCard"></button>
@@ -282,7 +287,7 @@ div.srow{cursor:default}
     <div class="seg mini" id="histSeg" style="margin:0 0 10px"></div>
     <div id="charts"></div>
     <div class="label">Stats</div><div id="statTable"></div>
-    <div class="foot"><button id="ver">Sweep v0.11</button><button id="reset">Reset progress</button></div>
+    <div class="foot"><button id="reset">Reset progress</button></div>
   </div>
 </section>
 <div class="overlay hidden" id="ov2"><div class="sheet" id="sheet2"></div></div>
@@ -966,6 +971,7 @@ if(typeof module!=='undefined') module.exports={CAMPS,levelSpec};
 // ===================== APP =====================
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 const ICON={
+ save:'<svg class="i" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>',
  people:'<svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.6c2.6-.2 4.5 1.4 5 4.4"/></svg>',
  chart:'<svg class="i" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="M8 16l4-5 3 3 5-7"/></svg>',
  share:'<svg class="i" viewBox="0 0 24 24"><path d="M12 15V3M7.5 7.5L12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
@@ -1201,7 +1207,30 @@ const DENS={calm:{name:'Calm',p:.14,per:20},standard:{name:'Standard',p:.17,per:
 const LV=[0,50,150,300,525,825,1225,1725,2375,3175,4075,5075,6175,7375,8675,10075,11575,13175,14875,16675], MAXL=20;
 
 // ---------- save data (this browser only) ----------
-const KEY='sweep.v1';
+const KEY='sweep.v1', VERSION='0.12';
+// What's new: shown once after an update (newest first). Keep entries short and player-facing.
+const CHANGES=[
+ {v:'0.12',items:['Backup reminders: a gentle nudge if you haven\'t backed up in a month.','Save your backup to a file, or restore from one. You see the file size before saving.','A Privacy page in Settings: Sweep collects nothing.','This What\'s new page, with the version number.']},
+ {v:'0.11',items:['League stars rebalanced: ★ reach 75% (even if you hit a mine) · ★ clear it · ★ no hints and under 2:30.','Ties go to more total progress, then the faster time.','League 0 restarted under the new rules.']},
+ {v:'0.10',items:['Leagues: a new season every month with a shared daily round.','Join with a locked name, share one link with your whole month, and climb the star table.','Season recap with podium XP, Season Champion, a crown and a trophy cabinet.']},
+ {v:'0.9',items:['Medal flags, Copper, Silver, Gilded and Pearl boards, and new win effects for league placings.','Phone bars now match the game, and an optional full-screen mode.']},
+ {v:'0.8',items:['Rule variants: Hex, Wraparound, Knight\'s move and Double mines.','Post-game analysis, challenge codes, pause, auto-flag, tap magnifier, colourblind numbers and left-handed controls.','Weekly challenges and stats over time.']}];
+function openNews(all){
+  const list=all?CHANGES:CHANGES.slice(0,1);
+  sheet2(`<h2>What's new</h2><div class="sub">Sweep v${VERSION}</div>
+    ${list.map((c,i)=>`<div class="label" style="margin:${i?14:4}px 2px 6px;text-align:left">Version ${c.v}</div><ul class="news">${c.items.map(x=>`<li>${x}</li>`).join('')}</ul>`).join('')}
+    <div class="btns" style="margin-top:12px">${all?'':'<button class="ghost" id="newsAll">Earlier updates</button>'}<button class="primary" data-close>Got it</button></div>`);
+  const b=$('#newsAll'); if(b) b.onclick=()=>openNews(true); }
+function checkNews(){ if(S.seenVer===VERSION) return; const veteran=!!S.seenVer||S.xp>0||S.tutDone; S.seenVer=VERSION; persist(); if(veteran) setTimeout(()=>openNews(false),600); }
+function openPrivacy(){
+  sheet2(`<h2>Privacy</h2><div class="sub">Short version: Sweep collects nothing.</div><ul class="news">
+    <li><b>No accounts, ads, analytics or trackers.</b> Nothing about you or how you play is sent anywhere.</li>
+    <li><b>Your progress stays on this device</b>, in your browser's storage. Clearing site data removes it, so keep a backup.</li>
+    <li><b>No network requests</b> beyond loading the game's own files. Fonts are bundled, and a security policy blocks connections to any other site.</li>
+    <li><b>Links you share</b> (challenges and league codes) contain only what's shown: the board, your times, the name you chose and a random player ID. They go only where you send them.</li>
+    <li><b>Backups</b> are a code or a text file that you keep. Sweep never uploads them.</li>
+    <li><b>Open source</b> under the MIT licence, so anyone can check all of this.</li></ul>
+    <div class="btns" style="margin-top:12px"><button class="primary" data-close>Close</button></div>`); }
 // Browsers only allow full screen right after a tap, so re-enter it on the next tap if it was dropped (e.g. after switching apps)
 function goFull(){ if(!document.fullscreenEnabled||document.fullscreenElement) return; const r=document.documentElement.requestFullscreen; if(r) r.call(document.documentElement,{navigationUI:'hide'}).catch(()=>{}); }
 addEventListener('pointerup',()=>{ if(typeof S!=='undefined'&&S.fullscreen) goFull(); },true);
@@ -1210,14 +1239,14 @@ addEventListener('appinstalled',()=>{ window.__sweepInstall=null; if(cur==='home
 const REDUCED=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const defSave=()=>({camp:{},shapes:{},rules:{},rrule:'classic',rshape:'standard',track:'day',ds:{cur:0,best:0,last:'',sevens:0},mstones:0,expCells:0,runMeta:null,theme:'minimal',flag:'pennant',reveal:'fade',sound:'soft',fx:'none',sfx:true,music:true,haptics:true,motion:!REDUCED,
   autoflag:false,loupe:true,fullscreen:false,fd:null,cb:false,lefty:false,name:'',hist:[],week:{},wbadges:0,
-  xp:0,ach:{},stats:{},endless:{},streak:0,bestStreak:0,wins:0,dens:'standard',daily:{date:''},appearance:'system',hints:0,hintDate:'',tutDone:false,devAll:false});
+  xp:0,ach:{},stats:{},endless:{},streak:0,bestStreak:0,wins:0,dens:'standard',daily:{date:''},appearance:'system',hints:0,hintDate:'',tutDone:false,bk:{last:0,nudged:0},seenVer:''});
 let S=defSave(); try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s) S=Object.assign(defSave(),s); }catch(e){}
 const persist=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
 const statOf=d=>S.stats[d]||(S.stats[d]={played:0,won:0,best:0});
 const endOf=d=>S.endless[d]||(S.endless[d]={best:0,runs:0});
 const levelOf=xp=>{ let l=1; while(l<MAXL&&xp>=LV[l]) l++; return l; };
 const level=()=>levelOf(S.xp);
-const owned=it=>S.devAll||((!it.req||!!S.ach[it.req])&&(!it.lvl||level()>=it.lvl)&&(!it.stars||totalStars()>=it.stars));
+const owned=it=>((!it.req||!!S.ach[it.req])&&(!it.lvl||level()>=it.lvl)&&(!it.stars||totalStars()>=it.stars));
 const CB_LIGHT=['#0072B2','#009E73','#D55E00','#7B3FA0','#B87800','#0E8FC2','#1a1a1a','#6e6e6e'], CB_DARK=['#56B4E9','#2ED3A0','#FF8A3D','#E89AC7','#F0C142','#9AD9FF','#ffffff','#a9a9a9'];
 function lumOf(hex){ if(typeof hex!=='string'||hex[0]!=='#') return .5; const c=hex.slice(1), n=[0,2,4].map(i=>parseInt(c.substr(i,2),16)/255).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)); return .2126*n[0]+.7152*n[1]+.0722*n[2]; }
 const CBC=new Map();
@@ -2422,8 +2451,8 @@ function tutDone(){
 const campOf=ci=>S.camp[CAMPS[ci].id]||(S.camp[CAMPS[ci].id]=Array(15).fill(0));
 const popc=b=>(b&1)+((b>>1)&1)+((b>>2)&1);
 const totalStars=()=>CAMPS.reduce((a,C,ci)=>a+(S.camp[C.id]||[]).reduce((x,b)=>x+popc(b),0),0);
-const campOpen=ci=>S.devAll||ci===0||!!(campOf(ci-1)[14]&1);
-const levelOpen=(ci,li)=>campOpen(ci)&&(S.devAll||li===0||!!(campOf(ci)[li-1]&1));
+const campOpen=ci=>ci===0||!!(campOf(ci-1)[14]&1);
+const levelOpen=(ci,li)=>campOpen(ci)&&(li===0||!!(campOf(ci)[li-1]&1));
 const STAR_REWARDS=[30,75,135], starItem=n=>ALLC().find(x=>x.stars===n);
 const lvTag=(ci,li)=>`${CAMPS[ci].name[0]}${li+1}`;
 function nextLevel(){ for(let ci=0;ci<3;ci++){ if(!campOpen(ci)) return null; const a=campOf(ci); for(let li=0;li<15;li++) if(!(a[li]&1)) return [ci,li]; } return null; }
@@ -2549,7 +2578,17 @@ function openRules(d){
   $('#goRules').onclick=()=>{ S.rshape=sel; S.rrule=rule; persist(); hideOv2(); startClassic(d,sel,rule); };
 }
 
-// ---------- Backup code ----------
+// ---------- Backup code + backup files ----------
+// Progress lives only on this device, so remind players now and then (monthly, at most weekly if dismissed).
+const DAY=864e5, needsBackup=()=>(S.xp>=50||S.wins>=1)&&Date.now()-((S.bk&&S.bk.last)||0)>30*DAY&&Date.now()-((S.bk&&S.bk.nudged)||0)>7*DAY;
+const markBackup=()=>{ S.bk=Object.assign({last:0,nudged:0},S.bk,{last:Date.now()}); persist(); renderNudge(); };
+function renderNudge(){ const el=$('#bkNudge'); if(!el) return; if(!needsBackup()){ el.innerHTML=''; return; }
+  const last=S.bk&&S.bk.last;
+  el.innerHTML=`<div class="card nudge"><div class="ico">${ICON.save}</div><div class="grow"><div class="t">Back up your progress</div><div class="s">${last?`Last backup ${Math.floor((Date.now()-last)/DAY)} days ago.`:'You haven\'t made a backup yet.'} Your progress lives only on this device.</div>
+    <div class="nb"><button class="primary sm" id="nbGo">Back up</button><button class="ghost sm" id="nbLater">Later</button></div></div></div>`;
+  $('#nbGo').onclick=openBackup; $('#nbLater').onclick=()=>{ S.bk=Object.assign({last:0},S.bk,{nudged:Date.now()}); persist(); renderNudge(); }; }
+const fmtBytes=n=>n<1024?`${n} bytes`:n<1048576?`${(n/1024).toFixed(1)} KB`:`${(n/1048576).toFixed(1)} MB`;
+const bkName=()=>`sweep-backup-${today()}.txt`;
 const b64e=u=>{ let s=''; for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); };
 const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function packSave(){
@@ -2567,17 +2606,30 @@ async function openBackup(){
   const code=await packSave();
   sheet2(`<h2>Backup</h2><div class="sub">Your progress is stored on this device only. Keep this code somewhere safe, like a note or an email to yourself, to restore it later or move it to another device.</div>
     <textarea class="code" id="bkOut" readonly>${code}</textarea>
-    <button class="primary" id="bkCopy" style="margin:10px 0 6px">Copy backup code</button>
+    <div class="row-b" style="margin:10px 0 6px"><button class="primary" id="bkCopy" style="margin:0">Copy code</button><button class="ghost" id="bkFile" style="margin:0">${ICON.save}Save to a file</button></div>
+    <div id="bkFileConfirm"></div>
     <div class="sub" style="font-size:12px;margin:0 0 16px">Covers XP, unlocks, stars, stats, streaks and settings. An Endless run in progress isn't included.</div>
     <div class="label" style="margin:0 2px 8px">Restore</div>
     <textarea class="code" id="bkIn" placeholder="Paste a backup code here"></textarea>
-    <div class="btns" style="margin-top:8px"><button class="ghost" id="bkRestore">Restore from code</button><button class="ghost" data-close>Close</button></div>`);
-  $('#bkCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(code); toast('Backup code copied',true); }catch(e){ const t=$('#bkOut'); t.focus(); t.select(); toast('Code selected. Copy it from the box.',true); } };
+    <div class="btns" style="margin-top:8px"><button class="ghost" id="bkRestore">Restore from code</button><button class="ghost" id="bkLoad">Restore from a file</button><button class="ghost" data-close>Close</button></div>
+    <input type="file" id="bkPick" accept=".txt,text/plain" hidden>`);
+  $('#bkCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(code); toast('Backup code copied',true); markBackup(); }catch(e){ const t=$('#bkOut'); t.focus(); t.select(); toast('Code selected. Copy it from the box.',true); markBackup(); } };
+  // the file is the backup code as plain text; its size is shown before anything is saved
+  $('#bkFile').onclick=()=>{ const blob=new Blob([code],{type:'text/plain'}), name=bkName();
+    $('#bkFileConfirm').innerHTML=`<div class="unl filec">${ICON.save}<div style="flex:1"><b>${name}</b><br><span style="color:var(--sub)">File size: ${fmtBytes(blob.size)} · saved to your device's downloads</span>
+      <div class="nb"><button class="primary sm" id="bkSaveYes">Save file (${fmtBytes(blob.size)})</button><button class="ghost sm" id="bkSaveNo">Cancel</button></div></div></div>`;
+    $('#bkSaveNo').onclick=()=>{ $('#bkFileConfirm').innerHTML=''; };
+    $('#bkSaveYes').onclick=()=>{ const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),4000); $('#bkFileConfirm').innerHTML=''; markBackup(); toast(`Saved ${name}`,true); }; };
+  $('#bkLoad').onclick=()=>$('#bkPick').click();
+  $('#bkPick').onchange=async e=>{ const f=e.target.files&&e.target.files[0]; if(!f) return;
+    if(f.size>5*1048576){ toast('That file is too big to be a Sweep backup.',true); return; }
+    $('#bkIn').value=(await f.text()).trim(); e.target.value=''; $('#bkRestore').click(); };
   let arm=0;
   $('#bkRestore').onclick=async e=>{ const b=e.currentTarget, v=$('#bkIn').value; if(!v.trim()){ toast('Paste a backup code first',true); return; }
     let o; try{ o=await unpackSave(v); }catch(err){ toast('That code doesn\'t look right. Check it was copied in full.',true); return; }
     if(Date.now()-arm>3000){ arm=Date.now(); b.textContent=`Tap again to replace this device's progress with the level ${levelOf(o.S.xp)} backup`; b.classList.add('warn'); return; }
-    S=Object.assign(defSave(),o.S); persist(); hideOv2(); applyTheme(); show('home'); toast('Progress restored',true); };
+    S=Object.assign(defSave(),o.S); S.bk=Object.assign({},S.bk,{last:Date.now()}); delete S.devAll; persist(); hideOv2(); applyTheme(); show('home'); toast('Progress restored',true); };
 }
 
 // ---------- HUD ----------
@@ -2687,6 +2739,7 @@ function renderHome(){
   $('#lvlCard').innerHTML=`<div class="badge">${L.l}</div><div class="grow"><div class="t">Level ${L.l}</div><div class="bar"><i style="width:${L.pct}%"></i></div><div class="s">${L.txt}</div></div><div class="r"><b>${S.hints}<small>/${hintCap()}</small></b><span>Hints</span></div>`;
   $('#tutCard').innerHTML=S.tutDone?'':`<button class="card" id="tutBtn"><div class="ico">${ICON.book}</div><div><div class="t">New here?</div><div class="s">Learn to play in about a minute.</div></div></button>`;
   const tb=$('#tutBtn'); if(tb) tb.onclick=startTutorial;
+  renderNudge();
   const nx=nextLevel(), ts=totalStars();
   $('#campCard').innerHTML=`<div class="ico">${ICON.route}</div><div><div class="t">${nx?CAMPS[nx[0]].name+' campaign':'All campaigns cleared'}</div><div class="s">${nx?`Next: Level ${nx[1]+1} · ${CAMPS[nx[0]].levels[nx[1]].n}`:'Go back for any stars you missed.'}</div></div><div class="r"><b>${ts}<small>/135</small></b><span>Stars</span></div>`;
   $('#campCard').onclick=()=>{ campTab=null; show('camp'); };
@@ -2736,8 +2789,10 @@ function renderHome(){
     +`<div class="slabel">Gameplay</div>`+sw('autoflag','Auto-flag certain mines')+sw('loupe','Tap magnifier on small tiles')
     +`<div class="slabel">Accessibility</div>`+sw('cb','Colourblind-safe numbers')+sw('lefty','Left-handed controls')+`<button class="srow" id="howto"><span>How to play</span><span style="color:var(--sub);font-weight:600">Tutorial ›</span></button>`
     +(window.__sweepInstall?`<button class="srow" id="installBtn"><span>Install as an app</span><span style="color:var(--sub);font-weight:600">›</span></button>`:'')
-    +`<button class="srow" id="backupBtn"><span>Backup &amp; restore</span><span style="color:var(--sub);font-weight:600">›</span></button>`;
-  $('#howto').onclick=startTutorial; $('#backupBtn').onclick=openBackup;
+    +`<button class="srow" id="backupBtn"><span>Backup &amp; restore</span><span style="color:var(--sub);font-weight:600">›</span></button>`
+    +`<button class="srow" id="newsBtn"><span>What's new</span><span style="color:var(--sub);font-weight:600">v${VERSION} ›</span></button>`
+    +`<button class="srow" id="privBtn"><span>Privacy</span><span style="color:var(--sub);font-weight:600">›</span></button>`;
+  $('#howto').onclick=startTutorial; $('#backupBtn').onclick=openBackup; $('#newsBtn').onclick=()=>openNews(true); $('#privBtn').onclick=openPrivacy;
   const ib=$('#installBtn'); if(ib) ib.onclick=async()=>{ const ev=window.__sweepInstall; if(!ev) return; ev.prompt(); try{ await ev.userChoice; }catch(e){} window.__sweepInstall=null; renderHome(); };
   $$('[data-ap]').forEach(b=>b.onclick=()=>{ S.appearance=b.dataset.ap; persist(); applyTheme(); renderHome(); });
   $$('[data-set]').forEach(b=>b.onclick=()=>{ const k=b.dataset.set; S[k]=!S[k]; persist();
@@ -2846,7 +2901,7 @@ function renderCharts(){
       const most=[['the opening',early],['the midgame',mid],['the endgame',late]].sort((a,b)=>b[1]-a[1])[0]; const nt=document.createElement('div'); nt.className='cn'; nt.style.margin='8px 0 0';
       nt.textContent=`Most of your losses come in ${most[0]}${most[0]==='the endgame'?'. Slow down near the finish: the mine count often settles the last few tiles.':most[0]==='the opening'?'. Look for 1-2-1 and 1-1 patterns along the first edge.':'.'}`; c.append(nt); } }
 }
-let verTaps=0; $('#ver').onclick=()=>{ if(++verTaps>=5){ verTaps=0; S.devAll=!S.devAll; persist(); toast(S.devAll?'Dev mode: every cosmetic unlocked':'Dev mode off'); applyTheme(); renderAwards(); } };
+
 let resetArm=0; $('#reset').onclick=()=>{ const b=$('#reset');
   if(Date.now()-resetArm<3000){ const keep={sfx:S.sfx,music:S.music,haptics:S.haptics,appearance:S.appearance}; S=Object.assign(defSave(),keep); persist(); b.textContent='Reset progress'; toast('Progress reset'); applyTheme(); renderAwards(); return; }
   resetArm=Date.now(); b.textContent='Tap again to reset'; setTimeout(()=>b.textContent='Reset progress',3000); };
@@ -2870,7 +2925,7 @@ if(darkMQ){ const f=()=>{ if(S.appearance==='system'){ applyTheme(); if(cur==='s
 $('#pauseBtn').innerHTML=ICON.pause; $('#back').innerHTML=ICON.back; $('#restart').innerHTML=ICON.restart; $('#tDig').innerHTML=ICON.dig; $('#tFlag').innerHTML=ICON.flag;
 $('#homeTheme').innerHTML=ICON.palette; $('#endIco').innerHTML=ICON.map; $('#icoT').innerHTML=ICON.palette; $('#icoA').innerHTML=ICON.trophy;
 $$('.topbar .iconbtn').forEach(b=>b.innerHTML=ICON.back);
-applyTheme(); lgS(); lgFinalize(); renderHome(); handleLink();
+delete S.devAll; applyTheme(); lgS(); lgFinalize(); renderHome(); handleLink(); checkNews();
 if(document.fonts) document.fonts.ready.then(()=>{ render(); if(cur==='style') renderStyle(); });
 </script>
 <script>
