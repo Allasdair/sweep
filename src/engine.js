@@ -551,24 +551,26 @@ const lgNo=date=>{ const [y,m]=date.split('-').map(Number); return (y-2026)*12+(
 const lgMonth=n=>{ const t=10+n; return [2026+Math.floor(t/12),((t%12)+12)%12+1]; };
 const lgDate=(n,day)=>{ const [y,m]=lgMonth(n); return `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`; };
 const lgLen=n=>{ const [y,m]=lgMonth(n); return new Date(y,m,0).getDate(); };
-// Season code: SWL1.<base64url> = version, season, player id, last season's rank, fingerprint of one played round,
-// a bitmask of rounds played, then won+hints and time for each played round, then the name.
+// Season code: SWL2.<base64url> = version, season, player id, last season's rank, fingerprint of one played round,
+// a bitmask of rounds played, then won+hints, time and % cleared for each played round, then the name.
+// (SWL1 codes from v0.10 had no % cleared: wins read as 100%, losses as 0%.)
 function encodeSeason(r){
   const b=[1, r.season&255, r.season>>8, ...r.pid, r.prev|0, r.fpDay|0];
   for(let i=0;i<8;i+=2) b.push(r.fp?parseInt(r.fp.substr(i,2),16):0);
   const days=Object.keys(r.days).map(Number).filter(d=>d>=1&&d<=31).sort((a,b)=>a-b); let mask=0; for(const d of days) mask|=1<<(d-1);
   b.push(mask&255,(mask>>>8)&255,(mask>>>16)&255,(mask>>>24)&255);
-  for(const d of days){ const x=r.days[d], t=Math.max(0,Math.min(65535,Math.round(x.t*10))); b.push((x.won?1:0)|(Math.min(127,x.h|0)<<1),t&255,t>>8); }
-  const nm=new TextEncoder().encode(cleanName(r.name||'')); b.push(nm.length,...nm);
-  return 'SWL1.'+toB64U(Uint8Array.from(b));
+  for(const d of days){ const x=r.days[d], t=Math.max(0,Math.min(65535,Math.round(x.t*10))); b.push((x.won?1:0)|(Math.min(127,x.h|0)<<1),t&255,t>>8,Math.max(0,Math.min(100,x.won?100:Math.round(x.p||0)))); }
+  const nm=new TextEncoder().encode(cleanName(r.name||'')); b[0]=2; b.push(nm.length,...nm);
+  return 'SWL2.'+toB64U(Uint8Array.from(b));
 }
 function decodeSeason(code){
-  const m=String(code).match(/SWL1\.([A-Za-z0-9_-]+)/); if(!m) throw new Error('nocode');
-  const b=fromB64U(m[1]); if(b[0]!==1||b.length<20) throw new Error('version');
+  const m=String(code).match(/SWL([12])\.([A-Za-z0-9_-]+)/); if(!m) throw new Error('nocode');
+  const b=fromB64U(m[2]), v=b[0]; if(String(v)!==m[1]||b.length<20) throw new Error('version'); const per=v===2?4:3;
   let p=1; const season=b[p]|(b[p+1]<<8); p+=2; const pid=[...b.slice(p,p+6)].map(v=>v.toString(16).padStart(2,'0')).join(''); p+=6;
   const prev=b[p++], fpDay=b[p++], fp=[...b.slice(p,p+4)].map(v=>v.toString(16).padStart(2,'0')).join(''); p+=4;
   const mask=(b[p]|(b[p+1]<<8)|(b[p+2]<<16)|(b[p+3]<<24))>>>0; p+=4; const days={};
-  for(let d=1;d<=31;d++) if(mask&(1<<(d-1))){ if(p+3>b.length) throw new Error('short'); const st=b[p]; days[d]={won:!!(st&1),h:st>>1,t:(b[p+1]|(b[p+2]<<8))/10}; p+=3; }
+  for(let d=1;d<=31;d++) if(mask&(1<<(d-1))){ if(p+per>b.length) throw new Error('short'); const st=b[p], won=!!(st&1);
+    days[d]={won,h:st>>1,t:(b[p+1]|(b[p+2]<<8))/10,p:won?100:per===4?Math.min(100,b[p+3]):0}; p+=per; }
   const nl=b[p++]||0, name=cleanName(new TextDecoder().decode(b.slice(p,p+nl)));
   return {season,pid,prev,fpDay,fp,days,name};
 }

@@ -276,7 +276,7 @@ div.srow{cursor:default}
     <div class="seg mini" id="histSeg" style="margin:0 0 10px"></div>
     <div id="charts"></div>
     <div class="label">Stats</div><div id="statTable"></div>
-    <div class="foot"><button id="ver">Sweep v0.10</button><button id="reset">Reset progress</button></div>
+    <div class="foot"><button id="ver">Sweep v0.11</button><button id="reset">Reset progress</button></div>
   </div>
 </section>
 <div class="overlay hidden" id="ov2"><div class="sheet" id="sheet2"></div></div>
@@ -1449,9 +1449,12 @@ function chalAfter(){
 // League 0 is November 2026, then +1 on the 1st of every month (local time). Each day of the month is a round:
 // the same board for everyone, one attempt, graded with campaign stars. The season table adds up stars.
 const APP_URL=(location.protocol==='https:'&&!/claude|anthropic|usercontent/.test(location.hostname))?location.origin+location.pathname:'https://allasdair.github.io/sweep/';
-const LG_PAR=Math.round(((FD_W*FD_H-FD_M)*.42*(1+Math.max(0,FD_M/(FD_W*FD_H)-.12)*2.5)+10)/5)*5; // same formula as campaign target times
-const LG_XP={1:150,2:100,3:75};
-const rStars=x=>x&&x.won?1+(x.h?0:1)+(x.t<=LG_PAR?1:0):0;
+// Stars per round: one for progress, two for skill.
+// ★ reach 75% (counts even if you then hit a mine) · ★ clear the board · ★ clean clear: no hints and under 2:30
+const LG_TARGET=150, LG_PROG=75, LG_XP={1:150,2:100,3:75};
+const pctOf=x=>x?(x.won?100:x.p||0):0;
+const rStars=x=>x?(pctOf(x)>=LG_PROG?1:0)+(x.won?1:0)+(x.won&&!x.h&&x.t<=LG_TARGET?1:0):0;
+const STARBITS=[0,1,3,7], LG_RULE=`★ reach ${LG_PROG}% (even if you hit a mine) · ★ clear it · ★ no hints and under 2:30`;
 const addDays=(d,n)=>{ const [y,m,dd]=d.split('-').map(Number), t=new Date(y,m-1,dd+n); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; };
 const prevDay=d=>addDays(d,-1);
 const ord=n=>n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th');
@@ -1464,6 +1467,11 @@ const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 function lgS(){ if(!S.lg) S.lg={}; const L=S.lg;
   if(!L.pid){ if(S.fd&&S.fd.pid) L.pid=S.fd.pid; else { const b=new Uint8Array(6); if(crypto.getRandomValues) crypto.getRandomValues(b); else b.forEach((_,i)=>b[i]=Math.random()*256|0); L.pid=[...b].map(v=>v.toString(16).padStart(2,'0')).join(''); } }
   L.sea=L.sea||{}; L.tiers=L.tiers||(S.fd&&S.fd.tiers)||{1:{st:0,last:'',tot:0},2:{st:0,last:'',tot:0},3:{st:0,last:'',tot:0}}; L.troph=L.troph||[];
+  if(!L.r1){ L.r1=1; L.mig=1; // v0.11: League 0 restarts under the new star rules
+    if(L.sea[0]){ delete L.sea[0]; L.tiers={1:{st:0,last:'',tot:0},2:{st:0,last:'',tot:0},3:{st:0,last:'',tot:0}}; L.troph=L.troph.filter(t=>t.season!==0);
+      ['fd1d','fd2d','fd3d','fd1w','fd2w','fd3w','fd1t','fd2t','fd3t','lgs1','lgs3'].forEach(id=>delete S.ach[id]);
+      if(S.daily&&S.daily.fd&&lgNo(S.daily.date||today())===0) delete S.daily.fd; }
+    S.fd=null; }
   if(S.fd&&S.fd.days&&!L.mig){ L.mig=1; // carry v0.9 Friends' Board results over: same boards, same days
     for(const [d,D] of Object.entries(S.fd.days)){ const Z=sea(lgNo(d)), day=+d.slice(8);
       if(D.me) (Z.m[L.pid]||(Z.m[L.pid]={n:'',d:{}})).d[day]={won:!!D.me.won,h:D.me.h||0,t:D.me.t};
@@ -1471,19 +1479,21 @@ function lgS(){ if(!S.lg) S.lg={}; const L=S.lg;
   return L; }
 function sea(n){ const L=S.lg||lgS(); return L.sea[n]||(L.sea[n]={joined:false,name:'',m:{},rf:{},fin:null}); }
 const myRes=(n,day)=>{ const Z=sea(n), me=Z.m[lgS().pid]; return me&&me.d[day]||null; };
-const better=(a,b)=>a.stars>b.stars||(a.stars===b.stars&&a.won&&(!b.won||a.t<b.t));
+const better=(a,b)=>a.stars>b.stars||(a.stars===b.stars&&(a.p>b.p||(a.p===b.p&&a.won&&b.won&&a.t<b.t)));
 function roundRows(n,day){ const Z=sea(n), pid=lgS().pid, rows=[];
   for(const [p,M] of Object.entries(Z.m)){ const x=M.d[day]; if(!x) continue; if(p===pid&&!Z.joined) continue;
-    rows.push({pid:p,me:p===pid,name:p===pid?Z.name:M.n||'Anonymous',pr:M.pr||0,won:x.won,t:x.t,h:x.h,stars:rStars(x)}); }
-  rows.sort((a,b)=>(b.stars-a.stars)||((a.won?a.t:1e9)-(b.won?b.t:1e9))||a.name.localeCompare(b.name));
+    rows.push({pid:p,me:p===pid,name:p===pid?Z.name:M.n||'Anonymous',pr:M.pr||0,won:x.won,t:x.t,h:x.h,p:pctOf(x),stars:rStars(x)}); }
+  rows.sort((a,b)=>(b.stars-a.stars)||(b.p-a.p)||((a.won?a.t:1e9)-(b.won?b.t:1e9))||a.name.localeCompare(b.name));
   rows.forEach(r=>{ r.rank=1+rows.filter(o=>better(o,r)).length; }); return rows; }
 function tableRows(n){ const Z=sea(n), pid=lgS().pid, rows=[];
   for(const [p,M] of Object.entries(Z.m)){ if(p===pid&&!Z.joined) continue; const xs=Object.values(M.d); if(!xs.length&&p!==pid) continue;
     const won=xs.filter(x=>x.won); rows.push({pid:p,me:p===pid,name:p===pid?Z.name:M.n||'Anonymous',pr:p===pid?myPrev(n):M.pr||0,
-      stars:xs.reduce((a,x)=>a+rStars(x),0),cleared:won.length,rounds:xs.length,time:won.reduce((a,x)=>a+x.t,0)}); }
-  if(Z.joined&&!rows.some(r=>r.me)) rows.push({pid,me:true,name:Z.name,pr:myPrev(n),stars:0,cleared:0,rounds:0,time:0});
-  rows.sort((a,b)=>(b.stars-a.stars)||(b.cleared-a.cleared)||(a.time-b.time)||a.name.localeCompare(b.name));
-  rows.forEach(r=>{ r.rank=1+rows.filter(o=>o.stars>r.stars||(o.stars===r.stars&&(o.cleared>r.cleared||(o.cleared===r.cleared&&o.time<r.time)))).length; }); return rows; }
+      stars:xs.reduce((a,x)=>a+rStars(x),0),prog:xs.reduce((a,x)=>a+pctOf(x),0),cleared:won.length,rounds:xs.length,time:won.reduce((a,x)=>a+x.t,0)}); }
+  if(Z.joined&&!rows.some(r=>r.me)) rows.push({pid,me:true,name:Z.name,pr:myPrev(n),stars:0,prog:0,cleared:0,rounds:0,time:0});
+  // ties: more total progress, then the faster total time on cleared rounds
+  const ahead=(o,r)=>o.stars>r.stars||(o.stars===r.stars&&(o.prog>r.prog||(o.prog===r.prog&&o.time<r.time)));
+  rows.sort((a,b)=>(b.stars-a.stars)||(b.prog-a.prog)||(a.time-b.time)||a.name.localeCompare(b.name));
+  rows.forEach(r=>{ r.rank=1+rows.filter(o=>ahead(o,r)).length; }); return rows; }
 const myPrev=n=>{ const f=sea(n-1).fin; return f&&f.counted&&f.rank<=3?f.rank:0; };
 const crown=pr=>pr===1?' 👑':'';
 // Round placements lock at midnight; the season locks at the end of the 1st of the next month (a day for final codes).
@@ -1526,34 +1536,34 @@ function lgImport(text,quiet){
   const L=lgS(), cur=lgCur(), out={add:0,upd:0,self:0,late:0,ver:0,bad:0,old:0,names:[]};
   const merge=(n,pid,name,pr,days)=>{ const Z=sea(n); if(Z.fin){ out.late++; return; }
     let M=Z.m[pid]; const fresh=!M; if(!M) M=Z.m[pid]={n:name||'Anonymous',d:{}}; // first name seen is locked for the season
-    if(pr) M.pr=pr; let ch=0; for(const [day,x] of Object.entries(days)){ const o=M.d[day]; if(!o||o.t!==x.t||o.won!==x.won||o.h!==x.h){ M.d[day]=x; ch++; } }
+    if(pr) M.pr=pr; let ch=0; for(const [day,x] of Object.entries(days)){ const o=M.d[day]; if(!o||o.t!==x.t||o.won!==x.won||o.h!==x.h||(o.p||0)!==(x.p||0)){ M.d[day]=x; ch++; } }
     if(fresh){ out.add++; out.names.push(M.n); } else if(ch) out.upd++; };
-  for(const c of allCodes(text,/SWL1\.[A-Za-z0-9_-]+/g)){ let r; try{ r=decodeSeason(c); }catch(e){ out.bad++; continue; }
+  for(const c of allCodes(text,/SWL[12]\.[A-Za-z0-9_-]+/g)){ let r; try{ r=decodeSeason(c); }catch(e){ out.bad++; continue; }
     if(r.pid===L.pid){ out.self++; continue; } if(r.season<cur-1||r.season>cur+1){ out.old++; continue; }
     if(r.fpDay){ let fp; try{ fp=fdPrint(lgDate(r.season,r.fpDay)); }catch(e){ out.bad++; continue; } if(fp!==r.fp){ out.ver++; continue; } }
     merge(r.season,r.pid,r.name,r.prev,r.days); }
   for(const c of allCodes(text,/SWR1\.[A-Za-z0-9_-]+/g)){ let r; try{ r=decodeResult(c); }catch(e){ out.bad++; continue; } // v0.9 single-day links
     if(r.pid===L.pid){ out.self++; continue; } const n=lgNo(r.date); if(n<cur-1||n>cur+1){ out.old++; continue; }
     let fp; try{ fp=fdPrint(r.date); }catch(e){ out.bad++; continue; } if(fp!==r.fp){ out.ver++; continue; }
-    merge(n,r.pid,r.name,0,{[+r.date.slice(8)]:{won:r.won,h:r.hints,t:r.time}}); }
+    merge(n,r.pid,r.name,0,{[+r.date.slice(8)]:{won:r.won,h:r.hints,t:r.time,p:r.won?100:0}}); }
   persist();
   if(!quiet){ const m=[]; if(out.add) m.push(out.add===1?`${out.names[0]} added to the league`:`${out.add} players added`); if(out.upd) m.push(`${out.upd} updated`);
     if(!out.add&&!out.upd&&!out.self&&!out.ver&&!out.bad&&!out.old&&!out.late) m.push('Nothing new');
     if(out.self) m.push('that one\'s yours'); if(out.ver) m.push(`${out.ver} from a different game version (ask them to update)`);
     if(out.late) m.push(`${out.late} arrived after that season ended`); if(out.old) m.push(`${out.old} from an old season`); if(out.bad) m.push(`${out.bad} couldn't be read`);
-    if(!allCodes(text,/SW[LR]1\.[A-Za-z0-9_-]+/g).length) m.splice(0,m.length,'No league results found in that text'); toast(m.join(' · '),true); }
+    if(!allCodes(text,/SW(L[12]|R1)\.[A-Za-z0-9_-]+/g).length) m.splice(0,m.length,'No league results found in that text'); toast(m.join(' · '),true); }
   return out;
 }
 function myCode(){ const L=lgS(), n=lgCur(), Z=sea(n), me=Z.m[L.pid], days=me?me.d:{}, ds=Object.keys(days).map(Number);
   const fpDay=ds.length?Math.max(...ds):0;
   return encodeSeason({season:n,pid:L.pid.match(/../g).map(h=>parseInt(h,16)),prev:myPrev(n),fpDay,fp:fpDay?fdPrint(lgDate(n,fpDay)):'',days,name:Z.name}); }
 function lgShareText(){ const n=lgCur(), day=lgDay(), x=myRes(n,day), me=tableRows(n).find(r=>r.me);
-  const head=x?`Sweep League ${n} · Round ${day} · ${x.won?clock(x.t):'💥 DNF'} ${starStr(rStars(x)?[0,1,3,7][rStars(x)]:0)}`:`Sweep League ${n}`;
+  const head=x?`Sweep League ${n} · Round ${day} · ${x.won?clock(x.t):`💥 ${pctOf(x)}%`} ${starStr(STARBITS[rStars(x)])}`:`Sweep League ${n}`;
   return `${head}\nSeason: ${me?me.stars:0}★ from ${me?me.rounds:0} round${me&&me.rounds===1?'':'s'}\nTap to update my results in your league: ${APP_URL}#l=${myCode()}`; }
 function openJoin(){
   const n=lgCur(), [y,m]=lgMonth(n), end=new Date(y,m,0).toLocaleDateString(undefined,{month:'short',day:'numeric'});
   sheet2(`<h2>Join League ${n}</h2><div class="sub">${monthName(n)} · ${lgLeft()}</div>
-    <div class="sub" style="text-align:left;margin:0 0 12px">Every day there's a new round: the same Intermediate board for every player, one attempt. Each round earns up to three stars: clear it, use no hints, and beat ${clock(LG_PAR)}. The season table adds up your stars.</div>
+    <div class="sub" style="text-align:left;margin:0 0 12px">Every day there's a new round: the same Intermediate board for every player, one attempt. Each round earns up to three stars: reach ${LG_PROG}% (even if you then hit a mine), clear the board, and clear it with no hints in under ${clock(LG_TARGET)}. The season table adds up your stars.</div>
     <div class="label" style="margin:0 2px 6px;text-align:left">League name</div><input class="code nm" id="lgName" maxlength="16" placeholder="Pick a name" value="${(S.name||'').replace(/"/g,'&quot;')}">
     <div class="sub" style="text-align:left;font-size:12.5px;margin:-4px 0 12px">Your name is locked until League ${n} ends on ${end}.</div>
     <div class="btns"><button class="primary" id="lgJoin">Join League ${n}</button><button class="ghost" data-close>Not now</button></div>`);
@@ -1575,7 +1585,7 @@ function startRound(){
 }
 function fdAfter(){ // a league round finished (or progressed)
   const ds=dailyState(), live=cfg.date===ds.date, st=statOf('intermediate'), Z=sea(cfg.season), L=lgS();
-  const put=x=>{ if(!live) return; (Z.m[L.pid]||(Z.m[L.pid]={n:Z.name,d:{}})).d[cfg.round]=x; };
+  const put=x=>{ if(!live) return; if(x.won) x.p=100; (Z.m[L.pid]||(Z.m[L.pid]={n:Z.name,d:{}})).d[cfg.round]=x; };
   if(G.state==='play'&&G.revCount>0&&!G.fdCount){ G.fdCount=1; st.played++; }
   if(G.state==='won'&&!recorded){ recorded=true; const t=Math.round(G.elapsed()*10)/10, h=G.hintsUsed||0;
     put({won:true,h,t}); if(live) ds.fd={st:'won',t};
@@ -1587,13 +1597,13 @@ function fdAfter(){ // a league round finished (or progressed)
     if(ups.length) setTimeout(()=>{ sfx('level'); levelBurst(); },ws+650);
     later(()=>ovRound(true,{t,h,xp,ups,got,wk}),mo?ws+1250:380); }
   else if(G.state==='lost'&&!recorded){ recorded=true; const t=Math.round(G.elapsed()*10)/10;
-    put({won:false,h:G.hintsUsed||0,t}); if(live) ds.fd={st:'lost'}; S.streak=0; logGame(false); persist(); buzz([40,40,80]); later(()=>ovRound(false,{t}),motionOn()?1350:500); }
+    put({won:false,h:G.hintsUsed||0,t,p:Math.floor(G.revCount/(G.NP-G.mineCells)*100)}); if(live) ds.fd={st:'lost'}; S.streak=0; logGame(false); persist(); buzz([40,40,80]); later(()=>ovRound(false,{t}),motionOn()?1350:500); }
   else saveDaily();
 }
-function ovRound(won,r){ const n=cfg.season, x=myRes(n,cfg.round)||{won,t:r.t,h:r.h||0}, sr=rStars(x), tb=tableRows(n), me=tb.find(z=>z.me), rr=roundRows(n,cfg.round), mr=rr.find(z=>z.me);
+function ovRound(won,r){ const n=cfg.season, x=myRes(n,cfg.round)||{won,t:r.t,h:r.h||0,p:won?100:0}, sr=rStars(x), tb=tableRows(n), me=tb.find(z=>z.me), rr=roundRows(n,cfg.round), mr=rr.find(z=>z.me);
   sheet(`<h2>${won?'Cleared':'Boom'}</h2><div class="sub">League ${n} · Round ${cfg.round}</div>
-  <div class="stats"><div><b>${won?fmt(r.t):'DNF'}</b><span>Time</span></div><div><b>${me?me.stars+'★':'—'}</b><span>Season</span></div></div>
-  <div class="starline">${starStr([0,1,3,7][sr])}<small>${sr<3?`Stars: clear · no hints · under ${clock(LG_PAR)}`:'Perfect round'}</small></div>
+  <div class="stats"><div><b>${won?fmt(r.t):pctOf(x)+'%'}</b><span>${won?'Time':'Cleared'}</span></div><div><b>${me?me.stars+'★':'—'}</b><span>Season</span></div></div>
+  <div class="starline">${starStr(STARBITS[sr])}<small>${sr<3?LG_RULE:'Perfect round'}</small></div>
   ${won?`<div class="xpline">+${r.xp} XP${r.wk?'<small>incl. weekly</small>':''}</div>`:''}
   <div class="sub" style="margin:-2px 0 12px">${tb.length>1?`Table: <b>${ord(me.rank)}</b> of ${tb.length}${rr.length>1?` · Round: ${ord(mr.rank)} of ${rr.length} so far`:''}`:'No other players yet. Share your season code and ask friends to join.'}</div>
   ${won?`${weekLine(r.wk)}${r.ups.map(lvlLine).join('')}${r.got.map(unl).join('')}`:''}
@@ -1615,7 +1625,7 @@ function openLeague(tab){
     body=rows.length?`<div class="lb">${rows.map(r=>row(r,r.stars+'★',`${r.rounds} round${r.rounds===1?'':'s'}`)).join('')}</div>`:'<div class="sub" style="margin:8px 0 12px">No players yet. Join and share your code to start the table.</div>'; }
   else if(tab==='round'){ const rows=roundRows(n,day), others=rows.filter(r=>!r.me).length;
     body=!played&&Z.joined?`<div class="sub" style="margin:8px 0 12px">${others} player${others===1?' has':'s have'} played Round ${day}. Play to see their results.</div>`
-      :rows.length?`<div class="lb">${rows.map(r=>row(r,r.won?starStr([0,1,3,7][r.stars]):'DNF',r.won?fmt(r.t):'')).join('')}</div>`:'<div class="sub" style="margin:8px 0 12px">No results for this round yet.</div>'; }
+      :rows.length?`<div class="lb">${rows.map(r=>row(r,starStr(STARBITS[r.stars]),r.won?fmt(r.t):`💥 at ${r.p}%`)).join('')}</div>`:'<div class="sub" style="margin:8px 0 12px">No results for this round yet.</div>'; }
   else { const f=P.fin; body=f?`<div class="sub" style="margin:0 0 8px">Final table · ${P.joined?`you finished ${ord(f.rank)} of ${f.n}`:'you didn\'t play'}</div><div class="lb">${f.top.map((r,i)=>`<div class="lbr${r.me?' me':''}"><span class="lbk">${i+1}</span><span class="lbn">${esc(r.name)}${r.me?' <small>(you)</small>':''}</span><span class="lbt">${r.stars}★</span></div>`).join('')}</div>`
       :`<div class="lb">${tableRows(n-1).map(r=>row(r,r.stars+'★','')).join('')}</div><div class="sub" style="font-size:12px;margin:-6px 0 10px">Final results lock at the end of the 1st. Late codes still count until then.</div>`; }
   const T=L.tiers, live=k=>T[k].last===prevDay(today())||T[k].last===today()?T[k].st:0;
@@ -1630,7 +1640,7 @@ function openLeague(tab){
     <div class="label" style="margin:12px 2px 6px;text-align:left">Round placements</div>
     <div class="fdps">${[[1,'Winner'],[2,'Top 2'],[3,'Top 3']].map(([k,nm])=>`<div class="fdp"><b>${nm}</b><span>${live(k)}/7 in a row</span><span>${Math.min(T[k].tot,30)}/30 total</span></div>`).join('')}</div>
     ${L.troph.length?`<div class="label" style="margin:12px 2px 6px;text-align:left">Trophy cabinet</div><div class="lb">${L.troph.slice().reverse().map(t=>`<div class="lbr"><span class="lbk">${t.rank<=3&&t.counted?['🥇','🥈','🥉'][t.rank-1]:'·'}</span><span class="lbn">League ${t.season} <small>${monthName(t.season)}</small></span><span class="lbt">${ord(t.rank)} of ${t.n}<small>${t.stars}★</small></span></div>`).join('')}</div>`:''}
-    <div class="sub" style="font-size:12px;margin:8px 0 0;text-align:left">Stars per round: clear it, use no hints, and beat ${clock(LG_PAR)}. Ties go to more rounds cleared, then the faster total time. Round placements lock at midnight and count only if you beat at least one player; a round win also counts toward Top 2 and Top 3. Season results lock at the end of the 1st of next month.</div>`);
+    <div class="sub" style="font-size:12px;margin:8px 0 0;text-align:left">Stars per round: ${LG_RULE}. Ties go to more total progress, then the faster total time. Round placements lock at midnight and count only if you beat at least one player; a round win also counts toward Top 2 and Top 3. Season results lock at the end of the 1st of next month.</div>`);
   $$('#sheet2 [data-lt]').forEach(b=>b.onclick=()=>openLeague(b.dataset.lt));
   const j=$('#lgJoinB'); if(j) j.onclick=openJoin; const pl=$('#lgPlay'); if(pl) pl.onclick=()=>{ hideOv2(); startRound(); };
   const sh=$('#lgShareB'); if(sh) sh.onclick=openLgShare;
@@ -1639,11 +1649,11 @@ function openLeague(tab){
 function lgCardHTML(){ const n=lgCur(), Z=sea(n), day=lgDay(), x=myRes(n,day), rec=dailyState().fd, tb=tableRows(n), me=tb.find(r=>r.me);
   if(!Z.joined) return `<div class="ico">${ICON.people}</div><div class="grow"><div class="t">Join League ${n}</div><div class="s">A shared board every day. Stars decide the table.</div></div><div class="r"><b>Join</b><span>Free</span></div>`;
   const sub=x?`Round ${day} done · ${tb.length>1?`${ord(me.rank)} of ${tb.length} in the table`:'share your code to add rivals'}`:rec&&rec.st==='play'?`Round ${day} in progress · tap to continue`:`Round ${day} is ready · one attempt`;
-  return `<div class="ico">${ICON.people}</div><div class="grow"><div class="t">${x?`Round ${day} ${starStr([0,1,3,7][rStars(x)])}`:`Play Round ${day}`}</div><div class="s">${sub}</div></div><div class="r"><b>${me?me.stars+'★':'0★'}</b><span>${tb.length>1?ord(me.rank):'Season'}</span></div>`; }
-// links: #l=SWL1... (season code) or #r=SWR1... (v0.9) add league results; #c=SWC1... opens a challenge
-function handleLink(){ const h=decodeURIComponent(location.hash||''); if(!/SW[LRC]1\./.test(h)) return;
+  return `<div class="ico">${ICON.people}</div><div class="grow"><div class="t">${x?`Round ${day} ${starStr(STARBITS[rStars(x)])}`:`Play Round ${day}`}</div><div class="s">${sub}</div></div><div class="r"><b>${me?me.stars+'★':'0★'}</b><span>${tb.length>1?ord(me.rank):'Season'}</span></div>`; }
+// links: #l=SWL2... (season code; SWL1 from v0.10 still reads) or #r=SWR1... (v0.9) add league results; #c=SWC1... opens a challenge
+function handleLink(){ const h=decodeURIComponent(location.hash||''); if(!/SW(L[12]|R1|C1)\./.test(h)) return;
   try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
-  if(/SW[LR]1\./.test(h)){ lgImport(h); setTimeout(()=>openLeague('table'),300); } else setTimeout(()=>openChallengeEntry(h.match(/SWC1\.[A-Za-z0-9_-]+/)[0]),300); }
+  if(/SW(L[12]|R1)\./.test(h)){ lgImport(h); setTimeout(()=>openLeague('table'),300); } else setTimeout(()=>openChallengeEntry(h.match(/SWC1\.[A-Za-z0-9_-]+/)[0]),300); }
 addEventListener('hashchange',handleLink);
 
 // ---------- hints in play ----------
