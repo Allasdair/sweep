@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f4f4f1">
+<meta name="theme-color" content="#f4f4f1" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#111214" media="(prefers-color-scheme: dark)">
 <title>Sweep — No-Guess Minesweeper</title>
 <meta name="description" content="Ad-free, no-guess minesweeper. Every board can be cleared with logic alone.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -274,7 +274,7 @@ div.srow{cursor:default}
     <div class="seg mini" id="histSeg" style="margin:0 0 10px"></div>
     <div id="charts"></div>
     <div class="label">Stats</div><div id="statTable"></div>
-    <div class="foot"><button id="ver">Sweep v0.8</button><button id="reset">Reset progress</button></div>
+    <div class="foot"><button id="ver">Sweep v0.8.1</button><button id="reset">Reset progress</button></div>
   </div>
 </section>
 <div class="overlay hidden" id="ov2"><div class="sheet" id="sheet2"></div></div>
@@ -1090,11 +1090,14 @@ const LV=[0,50,150,300,525,825,1225,1725,2375,3175,4075,5075,6175,7375,8675,1007
 
 // ---------- save data (this browser only) ----------
 const KEY='sweep.v1';
+// Browsers only allow full screen right after a tap, so re-enter it on the next tap if it was dropped (e.g. after switching apps)
+function goFull(){ if(!document.fullscreenEnabled||document.fullscreenElement) return; const r=document.documentElement.requestFullscreen; if(r) r.call(document.documentElement,{navigationUI:'hide'}).catch(()=>{}); }
+addEventListener('pointerup',()=>{ if(typeof S!=='undefined'&&S.fullscreen) goFull(); },true);
 addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); window.__sweepInstall=e; if(cur==='home') renderHome(); });
 addEventListener('appinstalled',()=>{ window.__sweepInstall=null; if(cur==='home') renderHome(); toast('Sweep installed. Find it on your home screen.'); });
 const REDUCED=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 const defSave=()=>({camp:{},shapes:{},rules:{},rrule:'classic',rshape:'standard',track:'day',ds:{cur:0,best:0,last:'',sevens:0},mstones:0,expCells:0,runMeta:null,theme:'minimal',flag:'pennant',reveal:'fade',sound:'soft',fx:'none',sfx:true,music:true,haptics:true,motion:!REDUCED,
-  autoflag:false,loupe:true,cb:false,lefty:false,name:'',hist:[],week:{},wbadges:0,
+  autoflag:false,loupe:true,fullscreen:false,cb:false,lefty:false,name:'',hist:[],week:{},wbadges:0,
   xp:0,ach:{},stats:{},endless:{},streak:0,bestStreak:0,wins:0,dens:'standard',daily:{date:''},appearance:'system',hints:0,hintDate:'',tutDone:false,devAll:false});
 let S=defSave(); try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s) S=Object.assign(defSave(),s); }catch(e){}
 const persist=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
@@ -2361,6 +2364,7 @@ function renderHome(){
   const sw=(k,l)=>`<button class="srow" data-set="${k}"><span>${l}</span><i class="sw ${S[k]?'on':''}"></i></button>`;
   const ap=[['system','Auto'],['light','Light'],['dark','Dark']].map(([k,n])=>`<button data-ap="${k}" class="${S.appearance===k?'on':''}">${n}</button>`).join('');
   $('#settings').innerHTML=`<div class="srow"><span>Appearance</span><div class="seg mini">${ap}</div></div>`+sw('motion','Animations')+sw('sfx','Sound effects')+sw('music','Music')+sw('haptics','Vibration')
+    +(document.fullscreenEnabled?sw('fullscreen','Full screen (hide phone bars)'):'')
     +`<div class="slabel">Gameplay</div>`+sw('autoflag','Auto-flag certain mines')+sw('loupe','Tap magnifier on small tiles')
     +`<div class="slabel">Accessibility</div>`+sw('cb','Colourblind-safe numbers')+sw('lefty','Left-handed controls')+`<button class="srow" id="howto"><span>How to play</span><span style="color:var(--sub);font-weight:600">Tutorial ›</span></button>`
     +(window.__sweepInstall?`<button class="srow" id="installBtn"><span>Install as an app</span><span style="color:var(--sub);font-weight:600">›</span></button>`:'')
@@ -2370,6 +2374,7 @@ function renderHome(){
   $$('[data-ap]').forEach(b=>b.onclick=()=>{ S.appearance=b.dataset.ap; persist(); applyTheme(); renderHome(); });
   $$('[data-set]').forEach(b=>b.onclick=()=>{ const k=b.dataset.set; S[k]=!S[k]; persist();
     if(k==='music'){ if(S.music) Music.start(); else Music.stop(); }
+    if(k==='fullscreen'){ if(S.fullscreen) goFull(); else if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
     if(k==='cb'||k==='lefty') applyTheme(); if(k==='autoflag'&&S.autoflag) toast('Auto-flag marks mines a single number proves. Games with it on can\'t earn Pacifist or no-flag stars.');
     if(k==='sfx'&&S.sfx) sfx('flag'); if(k==='motion'){ anReset(); if(S.motion) levelBurst(); } renderHome(); });
 }
@@ -2490,7 +2495,7 @@ function applyTheme(){
   else v={bg:T.bg,panel:T.panel,ink:T.ink,sub:T.sub,accent:T.accent,accentInk:T.accentInk,line:T.uiLine||(T.dark?'rgba(255,255,255,.1)':'rgba(0,0,0,.08)')};
   for(const k in v) st.setProperty('--'+k,v[k]);
   document.body.classList.toggle('framed',framed); document.body.classList.toggle('lefty',!!S.lefty);
-  document.querySelector('meta[name=theme-color]').content=v.bg; st.colorScheme=(framed||T.dark)?'dark':'light';
+  document.querySelectorAll('meta[name=theme-color]').forEach(m=>m.content=v.bg); st.colorScheme=(framed||T.dark)?'dark':'light';
   if(cur==='game') resize(); else render();
 }
 if(darkMQ){ const f=()=>{ if(S.appearance==='system'){ applyTheme(); if(cur==='style') renderStyle(); } }; darkMQ.addEventListener?darkMQ.addEventListener('change',f):darkMQ.addListener(f); }
