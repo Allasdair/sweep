@@ -1,0 +1,22 @@
+<!doctype html><html><head><link rel="stylesheet" href="fonts.css"><style>html,body{margin:0;background:transparent}</style></head><body>
+<canvas id="c"></canvas>
+<script>
+// Sweep icon: a 3x3 corner of a board — covered tiles, two numbers and a flag
+function draw(size,mask){
+  const c=document.getElementById('c'); c.width=c.height=size; const x=c.getContext('2d'); x.clearRect(0,0,size,size);
+  const S=size, r=mask?0:S*.22; // maskable icons are full-bleed; the OS crops them
+  x.fillStyle='#1c1c1e'; x.beginPath(); x.roundRect(0,0,S,S,r); x.fill();
+  const area=mask?S*.56:S*.7, o=(S-area)/2, n=3, gap=area*.045, t=(area-gap*(n-1))/n, rad=t*.24;
+  const cells=[['c','c','c'],['1','f','c'],['1','2','2']];
+  const cols={'1':'#5aa2ff','2':'#4fd18b'};
+  for(let j=0;j<n;j++) for(let i=0;i<n;i++){ const k=cells[j][i], px=o+i*(t+gap), py=o+j*(t+gap);
+    x.fillStyle=(k==='c'||k==='f')?'#4a4a50':'#2c2c31'; x.beginPath(); x.roundRect(px,py,t,t,rad); x.fill();
+    if(k==='c'||k==='f'){ x.fillStyle='#5a5a61'; x.beginPath(); x.roundRect(px,py,t,t*.9,rad); x.fill(); }
+    if(cols[k]){ x.fillStyle=cols[k]; x.font=`800 ${t*.62}px Inter`; x.textAlign='center'; x.textBaseline='middle'; x.fillText(k,px+t/2,py+t*.54); }
+    if(k==='f'){ const s=t; x.strokeStyle=x.fillStyle='#ff5a4e'; x.lineWidth=s*.08; x.lineCap='round';
+      x.beginPath(); x.moveTo(px+s*.37,py+s*.22); x.lineTo(px+s*.37,py+s*.76); x.stroke();
+      x.beginPath(); x.moveTo(px+s*.39,py+s*.21); x.lineTo(px+s*.74,py+s*.36); x.lineTo(px+s*.39,py+s*.52); x.closePath(); x.fill(); }
+  }
+  return c.toDataURL('image/png');
+}
+</script></body></html>
