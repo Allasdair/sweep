@@ -143,6 +143,7 @@ td:first-child,th:first-child{text-align:left;font-weight:600}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,-160%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:16px;font-weight:600;font-size:14px;transition:transform .4s cubic-bezier(.2,.9,.3,1.15);z-index:9;width:max-content;max-width:90vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 #toast.on{transform:translate(-50%,0)}
 #ov2{position:fixed;z-index:6}
+button.lbr.lang{border:0;font:inherit;color:inherit;width:100%;cursor:pointer}
 .nudge{align-items:flex-start}.nudge .nb,.filec .nb{display:flex;gap:8px;margin-top:10px}
 button.sm{padding:9px 14px;font-size:13.5px;min-width:0;width:auto;margin:0}
 .filec{margin:4px 0 12px;align-items:flex-start;text-align:left}
@@ -966,6 +967,809 @@ function levelSpec(ci,li,landscape){
 }
 if(typeof module!=='undefined') module.exports={CAMPS,levelSpec};
 
+// Translations. Each row: [English (the key, as it appears on screen), Español, Français, Deutsch, Português (Brasil)].
+// {0}, {1}… stand for numbers, names or other text; captured parts are translated too if they match a row.
+// To add a language: add its code to I18N_LANGS and one more column to every row. Missing cells fall back to English.
+const I18N_LANGS=['en','es','fr','de','pt'];
+const I18N_ROWS=[];
+I18N_ROWS.push(
+// ---- home ----
+["No-guess minesweeper. Every board can be cleared with logic alone.","Buscaminas sin adivinar. Cada tablero se puede resolver solo con lógica.","Démineur sans hasard. Chaque grille se résout avec la logique seule.","Minesweeper ohne Raten. Jedes Feld lässt sich allein mit Logik lösen.","Campo minado sem chute. Todo tabuleiro pode ser resolvido só com lógica."],
+["Level {0}","Nivel {0}","Niveau {0}","Level {0}","Nível {0}"],
+["Hints","Pistas","Indices","Tipps","Dicas"],
+["Hint","Pista","Indice","Tipp","Dica"],
+["New here?","¿Eres nuevo?","Nouveau ici ?","Neu hier?","Primeira vez?"],
+["Learn to play in about a minute.","Aprende a jugar en un minuto.","Apprends à jouer en une minute.","Lerne das Spiel in etwa einer Minute.","Aprenda a jogar em cerca de um minuto."],
+["Campaign","Campaña","Campagne","Kampagne","Campanha"],
+["Daily","Diario","Quotidien","Täglich","Diário"],
+["Classic","Clásico","Classique","Klassisch","Clássico"],
+["Endless","Infinito","Infini","Endlos","Infinito"],
+["Weekly challenge","Reto semanal","Défi de la semaine","Wochen-Challenge","Desafio semanal"],
+["Beginner","Principiante","Débutant","Anfänger","Iniciante"],
+["Intermediate","Intermedio","Intermédiaire","Fortgeschritten","Intermediário"],
+["Expert","Experto","Expert","Experte","Especialista"],
+["Calm","Tranquilo","Calme","Ruhig","Calmo"],
+["Standard","Estándar","Standard","Standard","Padrão"],
+["Dense","Denso","Dense","Dicht","Denso"],
+["New boards in {0}h {1}m","Nuevos tableros en {0} h {1} min","Nouvelles grilles dans {0} h {1} min","Neue Felder in {0} Std. {1} Min.","Novos tabuleiros em {0}h {1}min"],
+["{0} campaign","Campaña {0}","Campagne {0}","Kampagne {0}","Campanha {0}"],
+["Beginner campaign","Campaña Principiante","Campagne Débutant","Anfänger-Kampagne","Campanha Iniciante"],
+["Intermediate campaign","Campaña Intermedio","Campagne Intermédiaire","Fortgeschrittenen-Kampagne","Campanha Intermediário"],
+["Expert campaign","Campaña Experto","Campagne Expert","Experten-Kampagne","Campanha Especialista"],
+["All campaigns cleared","Todas las campañas completadas","Toutes les campagnes terminées","Alle Kampagnen abgeschlossen","Todas as campanhas concluídas"],
+["Next: Level {0} · {1}","Siguiente: nivel {0} · {1}","Suivant : niveau {0} · {1}","Als Nächstes: Level {0} · {1}","Próximo: nível {0} · {1}"],
+["Stars","Estrellas","Étoiles","Sterne","Estrelas"],
+["Best","Mejor","Record","Bestzeit","Recorde"],
+["{0}×{1} · {2} mines · {3} XP","{0}×{1} · {2} minas · {3} XP","{0}×{1} · {2} mines · {3} XP","{0}×{1} · {2} Minen · {3} XP","{0}×{1} · {2} minas · {3} XP"],
+["Random shape · {0} XP","Forma aleatoria · {0} XP","Forme aléatoire · {0} XP","Zufällige Form · {0} XP","Formato aleatório · {0} XP"],
+["{0} board · {1} XP","Tablero {0} · {1} XP","Grille {0} · {1} XP","Form {0} · {1} XP","Tabuleiro {0} · {1} XP"],
+["{0} rules · {1} XP","Reglas {0} · {1} XP","Règles {0} · {1} XP","Regeln: {0} · {1} XP","Regras {0} · {1} XP"],
+["+{0} XP · 2×","+{0} XP · 2×","+{0} XP · 2×","+{0} XP · 2×","+{0} XP · 2×"],
+["Cleared in {0}","Completado en {0}","Réussi en {0}","Gelöst in {0}","Concluído em {0}"],
+["Already cleared today in {0}","Ya completado hoy en {0}","Déjà réussi aujourd'hui en {0}","Heute schon gelöst in {0}","Já concluído hoje em {0}"],
+["Already played today. New dailies at midnight.","Ya jugado hoy. Nuevos diarios a medianoche.","Déjà joué aujourd'hui. Nouvelles grilles à minuit.","Heute schon gespielt. Neue Tagesfelder um Mitternacht.","Já jogado hoje. Novos diários à meia-noite."],
+["New dailies arrive at midnight.","Los nuevos diarios llegan a medianoche.","Les nouvelles grilles arrivent à minuit.","Neue Tagesfelder kommen um Mitternacht.","Novos diários chegam à meia-noite."],
+["Today's done. See you tomorrow.","Hoy está hecho. Hasta mañana.","C'est fait pour aujourd'hui. À demain.","Für heute erledigt. Bis morgen.","Hoje está feito. Até amanhã."],
+["See you tomorrow.","Hasta mañana.","À demain.","Bis morgen.","Até amanhã."],
+["Clear a daily to start a streak.","Completa un diario para empezar una racha.","Réussis une grille du jour pour lancer une série.","Löse ein Tagesfeld, um eine Serie zu starten.","Conclua um diário para começar uma sequência."],
+["{0}-day streak","Racha de {0} días","Série de {0} jours","{0}-Tage-Serie","Sequência de {0} dias"],
+["{0}-day streak.","Racha de {0} días.","Série de {0} jours.","{0}-Tage-Serie.","Sequência de {0} dias."],
+["Best {0}.","Mejor: {0}.","Record : {0}.","Bestwert: {0}.","Recorde: {0}."],
+["Clear a daily today to keep it.","Completa un diario hoy para mantenerla.","Réussis une grille aujourd'hui pour la garder.","Löse heute ein Tagesfeld, um sie zu halten.","Conclua um diário hoje para mantê-la."],
+["Clear a daily tomorrow to keep it going.","Completa un diario mañana para seguir.","Réussis une grille demain pour continuer.","Löse morgen ein Tagesfeld, um weiterzumachen.","Conclua um diário amanhã para continuar."],
+["Continue run · {0} · {1} cells","Continuar partida · {0} · {1} casillas","Reprendre · {0} · {1} cases","Lauf fortsetzen · {0} · {1} Felder","Continuar partida · {0} · {1} casas"],
+["Start exploring","Empieza a explorar","Commencer l'exploration","Erkundung starten","Começar a explorar"],
+["One map that keeps growing as you clear it.","Un mapa que crece a medida que lo despejas.","Une carte qui s'agrandit à mesure que tu la dégages.","Eine Karte, die wächst, während du sie räumst.","Um mapa que cresce conforme você o limpa."],
+["New run","Nueva partida","Nouvelle partie","Neuer Lauf","Nova partida"],
+["Resume","Reanudar","Reprendre","Fortsetzen","Retomar"],
+["Friend challenge","Reto de amigos","Défi entre amis","Freundes-Challenge","Desafio de amigos"],
+["Paste a code from a friend and race their time.","Pega el código de un amigo y supera su tiempo.","Colle le code d'un ami et bats son temps.","Füge den Code eines Freundes ein und schlag seine Zeit.","Cole o código de um amigo e bata o tempo dele."],
+["This week","Esta semana","Cette semaine","Diese Woche","Esta semana"],
+["{0}d {1}h left","Quedan {0} d {1} h","Encore {0} j {1} h","Noch {0} T. {1} Std.","Faltam {0}d {1}h"],
+["{0}h left","Quedan {0} h","Encore {0} h","Noch {0} Std.","Faltam {0}h"],
+["Badge","Insignia","Badge","Abzeichen","Emblema"],
+["Badge earned. Next week brings a new rule. You have {0}.","Insignia conseguida. La semana que viene trae una regla nueva. Tienes {0}.","Badge obtenu. La semaine prochaine apporte une nouvelle règle. Tu en as {0}.","Abzeichen verdient. Nächste Woche gibt es eine neue Regel. Du hast {0}.","Emblema conquistado. Semana que vem chega uma nova regra. Você tem {0}."],
+["Back up your progress","Haz una copia de tu progreso","Sauvegarde ta progression","Sichere deinen Fortschritt","Faça backup do seu progresso"],
+["You haven't made a backup yet.","Aún no has hecho ninguna copia.","Tu n'as encore fait aucune sauvegarde.","Du hast noch keine Sicherung erstellt.","Você ainda não fez nenhum backup."],
+["Last backup {0} days ago.","Última copia hace {0} días.","Dernière sauvegarde il y a {0} jours.","Letzte Sicherung vor {0} Tagen.","Último backup há {0} dias."],
+["Your progress lives only on this device.","Tu progreso solo está en este dispositivo.","Ta progression n'existe que sur cet appareil.","Dein Fortschritt existiert nur auf diesem Gerät.","Seu progresso existe só neste aparelho."],
+["{0} Your progress lives only on this device.","{0} Tu progreso solo está en este dispositivo.","{0} Ta progression n'existe que sur cet appareil.","{0} Dein Fortschritt existiert nur auf diesem Gerät.","{0} Seu progresso existe só neste aparelho."],
+["Back up","Copiar","Sauvegarder","Sichern","Fazer backup"],
+["Later","Más tarde","Plus tard","Später","Depois"],
+// ---- level card ----
+["{0} / {1} XP · Next: {2}","{0} / {1} XP · Siguiente: {2}","{0} / {1} XP · Suivant : {2}","{0} / {1} XP · Als Nächstes: {2}","{0} / {1} XP · Próximo: {2}"],
+["{0} XP · Max level","{0} XP · Nivel máximo","{0} XP · Niveau max","{0} XP · Höchstes Level","{0} XP · Nível máximo"],
+["+1 daily hint","+1 pista diaria","+1 indice par jour","+1 Tipp pro Tag","+1 dica diária"],
+["+1 hint","+1 pista","+1 indice","+1 Tipp","+1 dica"],
+// ---- game ----
+["Pause","Pausa","Pause","Pause","Pausar"],
+["Paused","En pausa","En pause","Pausiert","Pausado"],
+["Home","Inicio","Accueil","Start","Início"],
+["New board","Nuevo tablero","Nouvelle grille","Neues Feld","Novo tabuleiro"],
+["Reveal mode","Modo descubrir","Mode révéler","Aufdeck-Modus","Modo revelar"],
+["Flag mode","Modo bandera","Mode drapeau","Flaggen-Modus","Modo bandeira"],
+["Fit board","Ajustar tablero","Ajuster la grille","Feld einpassen","Ajustar tabuleiro"],
+["Back","Atrás","Retour","Zurück","Voltar"],
+["Tutorial","Tutorial","Tutoriel","Tutorial","Tutorial"],
+["Weekly","Semanal","Hebdo","Woche","Semanal"],
+["Challenge","Reto","Défi","Challenge","Desafio"],
+["Puzzle","Puzle","Puzzle","Rätsel","Quebra-cabeça"],
+["Hex","Hex","Hex","Hex","Hex"],
+["Wrap","Envolvente","Torique","Ränder","Contínuo"],
+["Knight","Caballo","Cavalier","Springer","Cavalo"],
+["Double","Doble","Double","Doppelt","Duplo"],
+["Your first tap is always safe. Tap anywhere to start.","Tu primer toque siempre es seguro. Toca donde quieras para empezar.","Ton premier coup est toujours sûr. Touche n'importe où pour commencer.","Dein erster Tipp ist immer sicher. Tippe irgendwo, um zu starten.","Seu primeiro toque é sempre seguro. Toque em qualquer lugar para começar."],
+["Dig outward from the area you've cleared.","Excava desde la zona que ya has despejado.","Creuse à partir de la zone déjà dégagée.","Grabe von deinem geräumten Bereich aus weiter.","Cave a partir da área que você já limpou."],
+["Start on the glowing tile: every player starts there.","Empieza en la casilla brillante: todos empiezan ahí.","Commence par la case lumineuse : tout le monde commence là.","Starte auf dem leuchtenden Feld: Dort beginnen alle.","Comece pela casa brilhante: todos começam ali."],
+["Start on the glowing tile: that's where your friend began.","Empieza en la casilla brillante: ahí empezó tu amigo.","Commence par la case lumineuse : c'est là que ton ami a commencé.","Starte auf dem leuchtenden Feld: Dort hat dein Freund begonnen.","Comece pela casa brilhante: foi ali que seu amigo começou."],
+["No hints left. They refill tomorrow, and you earn more from level-ups and win streaks.","No te quedan pistas. Se recargan mañana, y ganas más al subir de nivel y con rachas.","Plus d'indices. Ils se rechargent demain, et tu en gagnes en montant de niveau et avec des séries.","Keine Tipps mehr. Morgen gibt es neue, und du verdienst mehr durch Level-ups und Siegesserien.","Sem dicas. Elas recarregam amanhã, e você ganha mais subindo de nível e com sequências."],
+["No provable move found right now.","No hay ninguna jugada demostrable ahora mismo.","Aucun coup démontrable pour l'instant.","Gerade gibt es keinen beweisbaren Zug.","Nenhuma jogada comprovável agora."],
+["Safe tile. The highlighted number proves it.","Casilla segura. El número resaltado lo demuestra.","Case sûre. Le nombre en surbrillance le prouve.","Sicheres Feld. Die markierte Zahl beweist es.","Casa segura. O número destacado prova isso."],
+["Safe tile. Compare the two highlighted numbers to see why.","Casilla segura. Compara los dos números resaltados para ver por qué.","Case sûre. Compare les deux nombres en surbrillance pour comprendre.","Sicheres Feld. Vergleiche die zwei markierten Zahlen, um zu sehen, warum.","Casa segura. Compare os dois números destacados para entender."],
+["Every mine is accounted for, so this tile is safe.","Todas las minas están localizadas, así que esta casilla es segura.","Toutes les mines sont trouvées, donc cette case est sûre.","Alle Minen sind gefunden, also ist dieses Feld sicher.","Todas as minas estão localizadas, então esta casa é segura."],
+["Your flag here is wrong. This tile is safe.","Tu bandera aquí está mal. Esta casilla es segura.","Ton drapeau ici est faux. Cette case est sûre.","Deine Flagge hier ist falsch. Dieses Feld ist sicher.","Sua bandeira aqui está errada. Esta casa é segura."],
+["Logic ran dry here, so a safe cell is glowing","La lógica se agotó aquí, así que brilla una casilla segura","La logique ne suffit plus ici, donc une case sûre brille","Hier hilft keine Logik weiter, darum leuchtet ein sicheres Feld","A lógica acabou aqui, então uma casa segura está brilhando"],
+["{0} hint ready","{0} pista lista","{0} indice prêt","{0} Tipp bereit","{0} dica pronta"],
+["{0} hints ready","{0} pistas listas","{0} indices prêts","{0} Tipps bereit","{0} dicas prontas"],
+["Board shapes use Classic rules","Las formas de tablero usan reglas clásicas","Les formes de grille utilisent les règles classiques","Feldformen nutzen die klassischen Regeln","Formatos de tabuleiro usam regras clássicas"],
+["Tap restart again to abandon this run","Vuelve a tocar reiniciar para abandonar esta partida","Touche encore Recommencer pour abandonner cette partie","Tippe nochmal auf Neustart, um diesen Lauf abzubrechen","Toque em reiniciar de novo para abandonar esta partida"],
+["Tap again to abandon your current run","Vuelve a tocar para abandonar tu partida actual","Touche encore pour abandonner ta partie en cours","Tippe nochmal, um deinen aktuellen Lauf abzubrechen","Toque de novo para abandonar sua partida atual"],
+// ---- win / lose sheets ----
+["Cleared","Completado","Réussi","Geschafft","Concluído"],
+["Boom","Bum","Boum","Bumm","Bum"],
+["You win!","¡Has ganado!","Tu as gagné !","Gewonnen!","Você venceu!"],
+["So close","Por poco","Presque","Knapp daneben","Quase"],
+["Time","Tiempo","Temps","Zeit","Tempo"],
+["Win streak","Racha de victorias","Série de victoires","Siegesserie","Sequência de vitórias"],
+["New best","Nuevo récord","Nouveau record","Neue Bestzeit","Novo recorde"],
+["· New best","· Nuevo récord","· Nouveau record","· Neue Bestzeit","· Novo recorde"],
+["Play again","Jugar otra vez","Rejouer","Nochmal spielen","Jogar de novo"],
+["Try again","Reintentar","Réessayer","Nochmal versuchen","Tentar de novo"],
+["View board","Ver tablero","Voir la grille","Feld ansehen","Ver tabuleiro"],
+["Analysis","Análisis","Analyse","Analyse","Análise"],
+["Share","Compartir","Partager","Teilen","Compartilhar"],
+["Daily 2×","Diario 2×","Quotidien 2×","Täglich 2×","Diário 2×"],
+["incl. weekly","incl. semanal","dont hebdo","inkl. Woche","inclui semanal"],
+["includes campaign bonus","incluye bonus de campaña","bonus de campagne inclus","inkl. Kampagnenbonus","inclui bônus de campanha"],
+["Hinted wins still give XP but don't set best times or speed achievements.","Las victorias con pistas dan XP, pero no cuentan para récords ni logros de velocidad.","Les victoires avec indices rapportent de l'XP, mais pas de record ni de succès de vitesse.","Siege mit Tipps geben XP, zählen aber nicht für Bestzeiten oder Tempo-Erfolge.","Vitórias com dicas dão XP, mas não contam para recordes nem conquistas de velocidade."],
+["Stars: clear · no hints or guesses · under {0}","Estrellas: completar · sin pistas ni adivinar · menos de {0}","Étoiles : réussir · sans indice ni hasard · moins de {0}","Sterne: lösen · ohne Tipps oder Raten · unter {0}","Estrelas: concluir · sem dicas nem chutes · abaixo de {0}"],
+["{0}% cleared","{0}% despejado","{0} % dégagé","{0} % geräumt","{0}% limpo"],
+["✗ {0}% cleared","✗ {0}% despejado","✗ {0} % dégagé","✗ {0} % geräumt","✗ {0}% limpo"],
+["{0}{1} · that one was solvable, promise","{0}{1} · se podía resolver, lo prometo","{0}{1} · celle-là était faisable, promis","{0}{1} · das war lösbar, versprochen","{0}{1} · esse dava para resolver, prometo"],
+// ---- level-ups, toasts ----
+["Level up!","¡Subes de nivel!","Niveau supérieur !","Level-up!","Subiu de nível!"],
+["Unlocked","Desbloqueado","Débloqué","Freigeschaltet","Desbloqueado"],
+["Achievement","Logro","Succès","Erfolg","Conquista"],
+["{0} unlocked","{0} desbloqueado","{0} débloqué","{0} freigeschaltet","{0} desbloqueado"],
+["Progress restored","Progreso restaurado","Progression restaurée","Fortschritt wiederhergestellt","Progresso restaurado"],
+["Progress reset","Progreso borrado","Progression réinitialisée","Fortschritt zurückgesetzt","Progresso apagado"],
+["Tap again to reset","Vuelve a tocar para borrar","Touche encore pour réinitialiser","Nochmal tippen zum Zurücksetzen","Toque de novo para apagar"],
+["Reset progress","Borrar progreso","Réinitialiser la progression","Fortschritt zurücksetzen","Apagar progresso"],
+["Sweep installed. Find it on your home screen.","Sweep instalado. Lo tienes en tu pantalla de inicio.","Sweep est installé. Tu le trouveras sur ton écran d'accueil.","Sweep ist installiert. Du findest es auf dem Startbildschirm.","Sweep instalado. Ele está na sua tela inicial."],
+// ---- style screen ----
+["Style","Estilo","Style","Stil","Estilo"],
+["Boards","Tableros","Grilles","Felder","Tabuleiros"],
+["Board","Tablero","Grille","Feld","Tabuleiro"],
+["Flags","Banderas","Drapeaux","Flaggen","Bandeiras"],
+["Reveals","Revelados","Révélations","Aufdecken","Revelações"],
+["Sounds","Sonidos","Sons","Sounds","Sons"],
+["Effects","Efectos","Effets","Effekte","Efeitos"],
+["In use","En uso","Utilisé","Aktiv","Em uso"],
+["Unlock:","Desbloqueo:","Déblocage :","Freischalten:","Desbloqueio:"],
+["Reach level {0}","Alcanza el nivel {0}","Atteins le niveau {0}","Erreiche Level {0}","Alcance o nível {0}"],
+["Earn {0} campaign stars","Consigue {0} estrellas de campaña","Gagne {0} étoiles de campagne","Sammle {0} Kampagnensterne","Ganhe {0} estrelas de campanha"],
+["{0} of {1} unlocked","{0} de {1} desbloqueados","{0} sur {1} débloqués","{0} von {1} freigeschaltet","{0} de {1} desbloqueados"],
+["Turn on Music in Settings to hear it","Activa la música en Ajustes para oírla","Active la musique dans les Réglages pour l'entendre","Schalte Musik in den Einstellungen ein, um es zu hören","Ative a música nas Configurações para ouvir"],
+["Starting kit","Kit inicial","Kit de départ","Startpaket","Kit inicial"],
+["Collection","Colección","Collection","Sammlung","Coleção"],
+// ---- settings ----
+["Settings","Ajustes","Réglages","Einstellungen","Configurações"],
+["Appearance","Apariencia","Apparence","Darstellung","Aparência"],
+["Auto","Auto","Auto","Auto","Automático"],
+["Light","Claro","Clair","Hell","Claro"],
+["Dark","Oscuro","Sombre","Dunkel","Escuro"],
+["Animations","Animaciones","Animations","Animationen","Animações"],
+["Sound effects","Efectos de sonido","Effets sonores","Soundeffekte","Efeitos sonoros"],
+["Music","Música","Musique","Musik","Música"],
+["Vibration","Vibración","Vibration","Vibration","Vibração"],
+["Gameplay","Juego","Jeu","Spiel","Jogabilidade"],
+["Auto-flag certain mines","Marcar minas seguras automáticamente","Marquer les mines certaines automatiquement","Sichere Minen automatisch markieren","Marcar minas certas automaticamente"],
+["Tap magnifier on small tiles","Lupa al tocar casillas pequeñas","Loupe sur les petites cases","Lupe bei kleinen Feldern","Lupa em casas pequenas"],
+["Full screen (hide phone bars)","Pantalla completa (ocultar barras)","Plein écran (masquer les barres)","Vollbild (Leisten ausblenden)","Tela cheia (ocultar barras)"],
+["Accessibility","Accesibilidad","Accessibilité","Barrierefreiheit","Acessibilidade"],
+["Colourblind-safe numbers","Números aptos para daltonismo","Chiffres adaptés au daltonisme","Farbenblind-freundliche Zahlen","Números para daltonismo"],
+["Left-handed controls","Controles para zurdos","Commandes pour gauchers","Linkshänder-Steuerung","Controles para canhotos"],
+["How to play","Cómo jugar","Comment jouer","Spielanleitung","Como jogar"],
+["Backup & restore","Copia y restauración","Sauvegarde et restauration","Sichern & Wiederherstellen","Backup e restauração"],
+["What's new","Novedades","Nouveautés","Neuigkeiten","Novidades"],
+["Privacy","Privacidad","Confidentialité","Datenschutz","Privacidade"],
+["Language","Idioma","Langue","Sprache","Idioma"],
+["Automatic","Automático","Automatique","Automatisch","Automático"],
+["Sweep restarts in the chosen language. Your progress is kept.","Sweep se reinicia en el idioma elegido. Tu progreso se conserva.","Sweep redémarre dans la langue choisie. Ta progression est conservée.","Sweep startet in der gewählten Sprache neu. Dein Fortschritt bleibt erhalten.","O Sweep reinicia no idioma escolhido. Seu progresso é mantido."],
+["Translations are new. If something reads oddly, tell the developer.","Las traducciones son nuevas. Si algo suena raro, avisa al desarrollador.","Les traductions sont nouvelles. Si quelque chose sonne bizarre, préviens le développeur.","Die Übersetzungen sind neu. Wenn etwas seltsam klingt, sag dem Entwickler Bescheid.","As traduções são novas. Se algo soar estranho, avise o desenvolvedor."],
+["Install as an app","Instalar como app","Installer comme appli","Als App installieren","Instalar como app"],
+["Auto-flag marks mines a single number proves. Games with it on can't earn Pacifist or no-flag stars.","El marcado automático pone bandera en minas que un solo número demuestra. Con él activado no puedes conseguir Pacifista ni estrellas sin banderas.","Le marquage auto place un drapeau sur les mines qu'un seul nombre prouve. Avec lui, impossible d'obtenir Pacifiste ou les étoiles sans drapeau.","Auto-Markieren flaggt Minen, die eine einzelne Zahl beweist. Damit gibt es weder Pazifist noch Ohne-Flaggen-Sterne.","A marcação automática coloca bandeira em minas que um só número prova. Com ela ativa, não dá para ganhar Pacifista nem estrelas sem bandeira."],
+// ---- common buttons ----
+["Close","Cerrar","Fermer","Schließen","Fechar"],
+["Cancel","Cancelar","Annuler","Abbrechen","Cancelar"],
+["Got it","Entendido","Compris","Verstanden","Entendi"],
+["Play","Jugar","Jouer","Spielen","Jogar"],
+["Play {0}","Jugar {0}","Jouer {0}","{0} spielen","Jogar {0}"],
+["Not now","Ahora no","Pas maintenant","Nicht jetzt","Agora não"],
+["Free","Gratis","Gratuit","Kostenlos","Grátis"],
+["Join","Unirse","Rejoindre","Beitreten","Entrar"],
+["Earlier updates","Novedades anteriores","Mises à jour précédentes","Frühere Updates","Atualizações anteriores"],
+["Version {0}","Versión {0}","Version {0}","Version {0}","Versão {0}"],
+["Sweep v{0}","Sweep v{0}","Sweep v{0}","Sweep v{0}","Sweep v{0}"],
+// ---- classic rules sheet ----
+["Rules","Reglas","Règles","Regeln","Regras"],
+["{0} XP per win","{0} XP por victoria","{0} XP par victoire","{0} XP pro Sieg","{0} XP por vitória"],
+["Random shape","Forma aleatoria","Forme aléatoire","Zufällige Form","Formato aleatório"],
+["{0}×{1} with {2} mines. Best times are recorded on standard boards.","{0}×{1} con {2} minas. Los récords se guardan en tableros estándar.","{0}×{1} avec {2} mines. Les records sont enregistrés sur les grilles standard.","{0}×{1} mit {2} Minen. Bestzeiten zählen auf Standardfeldern.","{0}×{1} com {2} minas. Recordes são salvos em tabuleiros padrão."],
+["Same mine density and XP. Counts as a win, but best times are only kept for standard boards.","Misma densidad de minas y XP. Cuenta como victoria, pero los récords solo se guardan en tableros estándar.","Même densité de mines et même XP. Compte comme une victoire, mais les records ne valent que pour les grilles standard.","Gleiche Minendichte und XP. Zählt als Sieg, aber Bestzeiten gibt es nur auf Standardfeldern.","Mesma densidade de minas e XP. Conta como vitória, mas recordes só valem em tabuleiros padrão."],
+["{0} Same mine count and XP. Best times are only kept for Classic rules.","{0} Mismo número de minas y XP. Los récords solo cuentan con reglas clásicas.","{0} Même nombre de mines et même XP. Les records ne valent qu'avec les règles classiques.","{0} Gleiche Minenzahl und XP. Bestzeiten zählen nur mit klassischen Regeln.","{0} Mesmo número de minas e XP. Recordes só valem com regras clássicas."],
+["Ring","Anillo","Anneau","Ring","Anel"],
+["Heart","Corazón","Cœur","Herz","Coração"],
+["Diamond","Diamante","Losange","Raute","Losango"],
+["Cross","Cruz","Croix","Kreuz","Cruz"],
+["Hourglass","Reloj de arena","Sablier","Sanduhr","Ampulheta"],
+["Swiss Cheese","Queso suizo","Gruyère","Schweizer Käse","Queijo suíço"],
+["Twin Islands","Islas gemelas","Îles jumelles","Zwillingsinseln","Ilhas gêmeas"],
+// ---- pause ----
+["{0} · {1}","{0} · {1}","{0} · {1}","{0} · {1}","{0} · {1}"],
+// ---- endless ----
+["Cells","Casillas","Cases","Felder","Casas"],
+["Distance","Distancia","Distance","Distanz","Distância"],
+["Run over","Partida terminada","Partie terminée","Lauf vorbei","Partida encerrada"],
+["found at {0} cells","encontrada a las {0} casillas","trouvée à {0} cases","gefunden bei {0} Feldern","encontrada em {0} casas"],
+["Next milestone {0} · +{1} XP","Próximo hito {0} · +{1} XP","Prochaine étape {0} · +{1} XP","Nächster Meilenstein {0} · +{1} XP","Próximo marco {0} · +{1} XP"],
+["Start a new {0} run","Empezar una partida {0}","Lancer une partie {0}","Neuen Lauf ({0}) starten","Começar uma partida {0}"],
+["Milestones","Hitos","Étapes","Meilensteine","Marcos"],
+["Expeditions","Expediciones","Expéditions","Expeditionen","Expedições"]
+);
+
+// Progress screen, achievements, expeditions, weekly challenges, stats charts and post-game analysis.
+I18N_ROWS.push(
+["Progress","Progreso","Progression","Fortschritt","Progresso"],
+["Levels","Niveles","Niveaux","Level","Níveis"],
+["Achievements","Logros","Succès","Erfolge","Conquistas"],
+["{0} XP","{0} XP","{0} XP","{0} XP","{0} XP"],
+["{0} XP total","{0} XP en total","{0} XP au total","{0} XP insgesamt","{0} XP no total"],
+["{0} of {1} achievements","{0} de {1} logros","{0} succès sur {1}","{0} von {1} Erfolgen","{0} de {1} conquistas"],
+["{0} of {1} ›","{0} de {1} ›","{0} sur {1} ›","{0} von {1} ›","{0} de {1} ›"],
+["Endless expeditions","Expediciones infinitas","Expéditions infinies","Endlos-Expeditionen","Expedições infinitas"],
+["Endless XP comes from milestones (every {0} cells in a run) and these expeditions.","En Infinito, la XP sale de los hitos (cada {0} casillas en una partida) y de estas expediciones.","En mode Infini, l'XP vient des étapes (toutes les {0} cases d'une partie) et de ces expéditions.","Im Endlos-Modus gibt es XP für Meilensteine (alle {0} Felder pro Lauf) und diese Expeditionen.","No Infinito, o XP vem dos marcos (a cada {0} casas numa partida) e destas expedições."],
+["Every level-up also gives you +1 hint. Your daily hint refill is {0}.","Cada subida de nivel también te da +1 pista. Tu recarga diaria es de {0}.","Chaque niveau gagné te donne aussi +1 indice. Ta recharge quotidienne est de {0}.","Jedes Level-up gibt dir außerdem +1 Tipp. Täglich füllen sich {0} Tipps auf.","Cada nível novo também dá +1 dica. Sua recarga diária é de {0}."],
+["Stats","Estadísticas","Statistiques","Statistik","Estatísticas"],
+["Played","Jugadas","Jouées","Gespielt","Jogadas"],
+["Won","Ganadas","Gagnées","Gewonnen","Vencidas"],
+["Win rate","% de victorias","Taux de victoire","Siegquote","Taxa de vitória"],
+["Mode","Modo","Mode","Modus","Modo"],
+["Daily streak","Racha diaria","Série quotidienne","Tagesserie","Sequência diária"],
+["7-day streaks","Rachas de 7 días","Séries de 7 jours","7-Tage-Serien","Sequências de 7 dias"],
+["Weekly badges","Insignias semanales","Badges hebdo","Wochenabzeichen","Emblemas semanais"],
+["Over time","Con el tiempo","Dans le temps","Im Verlauf","Ao longo do tempo"],
+["Solve times","Tiempos de resolución","Temps de résolution","Lösungszeiten","Tempos de resolução"],
+["Last {0} unassisted wins on standard boards. The line is your 5-game median.","Tus últimas {0} victorias sin ayuda en tableros estándar. La línea es tu mediana de 5 partidas.","Tes {0} dernières victoires sans aide sur grilles standard. La ligne est ta médiane sur 5 parties.","Deine letzten {0} Siege ohne Hilfe auf Standardfeldern. Die Linie ist dein Median über 5 Spiele.","Suas últimas {0} vitórias sem ajuda em tabuleiros padrão. A linha é sua mediana de 5 partidas."],
+["No unassisted standard wins yet.","Aún no hay victorias estándar sin ayuda.","Pas encore de victoire standard sans aide.","Noch keine Standardsiege ohne Hilfe.","Ainda não há vitórias padrão sem ajuda."],
+["Best {0} · latest median {1}","Mejor {0} · mediana reciente {1}","Record {0} · médiane récente {1}","Bestzeit {0} · aktueller Median {1}","Recorde {0} · mediana recente {1}"],
+["{0} · median {1}","{0} · mediana {1}","{0} · médiane {1}","{0} · Median {1}","{0} · mediana {1}"],
+["Win rate by week","Victorias por semana","Victoires par semaine","Siegquote pro Woche","Vitórias por semana"],
+["Last 8 weeks, this week on the right. Includes every board at this difficulty.","Últimas 8 semanas, la actual a la derecha. Incluye todos los tableros de esta dificultad.","8 dernières semaines, celle-ci à droite. Inclut toutes les grilles de cette difficulté.","Letzte 8 Wochen, diese Woche rechts. Enthält alle Felder dieser Stufe.","Últimas 8 semanas, a atual à direita. Inclui todos os tabuleiros desta dificuldade."],
+["Now","Ahora","Maintenant","Jetzt","Agora"],
+["{0}% won","{0}% ganadas","{0} % gagnées","{0} % gewonnen","{0}% vencidas"],
+["No games","Sin partidas","Aucune partie","Keine Spiele","Sem partidas"],
+["This week · {0} of {1}","Esta semana · {0} de {1}","Cette semaine · {0} sur {1}","Diese Woche · {0} von {1}","Esta semana · {0} de {1}"],
+["{0} week ago · {1} of {2}","Hace {0} semana · {1} de {2}","Il y a {0} semaine · {1} sur {2}","Vor {0} Woche · {1} von {2}","Há {0} semana · {1} de {2}"],
+["{0} weeks ago · {1} of {2}","Hace {0} semanas · {1} de {2}","Il y a {0} semaines · {1} sur {2}","Vor {0} Wochen · {1} von {2}","Há {0} semanas · {1} de {2}"],
+["Where you lose","Dónde pierdes","Où tu perds","Wo du verlierst","Onde você perde"],
+["{0} loss, placed by where the mine was on the board. Darker means more.","{0} derrota, situada según dónde estaba la mina en el tablero. Más oscuro significa más.","{0} défaite, placée selon l'emplacement de la mine sur la grille. Plus foncé = plus fréquent.","{0} Niederlage, eingeordnet nach der Position der Mine. Dunkler heißt häufiger.","{0} derrota, posicionada pelo lugar da mina no tabuleiro. Mais escuro significa mais."],
+["{0} losses, placed by where the mine was on the board. Darker means more.","{0} derrotas, situadas según dónde estaba la mina en el tablero. Más oscuro significa más.","{0} défaites, placées selon l'emplacement de la mine sur la grille. Plus foncé = plus fréquent.","{0} Niederlagen, eingeordnet nach der Position der Mine. Dunkler heißt häufiger.","{0} derrotas, posicionadas pelo lugar da mina no tabuleiro. Mais escuro significa mais."],
+["No losses at this difficulty yet. Nice.","Aún sin derrotas en esta dificultad. ¡Bien!","Aucune défaite à cette difficulté. Bravo.","Noch keine Niederlagen auf dieser Stufe. Stark.","Nenhuma derrota nesta dificuldade ainda. Boa."],
+["{0} loss","{0} derrota","{0} défaite","{0} Niederlage","{0} derrota"],
+["{0} losses","{0} derrotas","{0} défaites","{0} Niederlagen","{0} derrotas"],
+["top left of the board","arriba a la izquierda","en haut à gauche","oben links","em cima à esquerda"],
+["top centre of the board","arriba en el centro","en haut au centre","oben in der Mitte","em cima no centro"],
+["top right of the board","arriba a la derecha","en haut à droite","oben rechts","em cima à direita"],
+["middle left of the board","en el centro a la izquierda","au milieu à gauche","Mitte links","no meio à esquerda"],
+["middle centre of the board","en el centro","au centre","in der Mitte","no centro"],
+["middle right of the board","en el centro a la derecha","au milieu à droite","Mitte rechts","no meio à direita"],
+["bottom left of the board","abajo a la izquierda","en bas à gauche","unten links","embaixo à esquerda"],
+["bottom centre of the board","abajo en el centro","en bas au centre","unten in der Mitte","embaixo no centro"],
+["bottom right of the board","abajo a la derecha","en bas à droite","unten rechts","embaixo à direita"],
+["Opening","Apertura","Ouverture","Eröffnung","Abertura"],
+["Midgame","Medio juego","Milieu de partie","Mittelspiel","Meio de jogo"],
+["Endgame","Final","Fin de partie","Endspiel","Final"],
+["Most of your losses come in the opening. Look for 1-2-1 and 1-1 patterns along the first edge.","La mayoría de tus derrotas llegan en la apertura. Busca patrones 1-2-1 y 1-1 en el primer borde.","La plupart de tes défaites arrivent à l'ouverture. Cherche les motifs 1-2-1 et 1-1 le long du premier bord.","Die meisten Niederlagen passieren in der Eröffnung. Achte auf 1-2-1- und 1-1-Muster am ersten Rand.","A maioria das suas derrotas vem na abertura. Procure padrões 1-2-1 e 1-1 na primeira borda."],
+["Most of your losses come in the midgame.","La mayoría de tus derrotas llegan en el medio juego.","La plupart de tes défaites arrivent en milieu de partie.","Die meisten Niederlagen passieren im Mittelspiel.","A maioria das suas derrotas vem no meio de jogo."],
+["Most of your losses come in the endgame. Slow down near the finish: the mine count often settles the last few tiles.","La mayoría de tus derrotas llegan al final. Ve más despacio al acabar: el contador de minas suele resolver las últimas casillas.","La plupart de tes défaites arrivent en fin de partie. Ralentis vers la fin : le compte de mines règle souvent les dernières cases.","Die meisten Niederlagen passieren im Endspiel. Lass dir am Schluss Zeit: Die Minenzahl klärt oft die letzten Felder.","A maioria das suas derrotas vem no final. Vá com calma no fim: a contagem de minas costuma resolver as últimas casas."],
+["Finish a few Classic or Daily games at this difficulty and your trends show up here.","Termina unas cuantas partidas clásicas o diarias en esta dificultad y aquí verás tu evolución.","Termine quelques parties classiques ou quotidiennes à cette difficulté et tes tendances apparaîtront ici.","Beende ein paar klassische oder tägliche Spiele auf dieser Stufe, dann siehst du hier deine Entwicklung.","Termine algumas partidas clássicas ou diárias nesta dificuldade e sua evolução aparece aqui."],
+// analysis
+["3BV","3BV","3BV","3BV","3BV"],
+["Clicks","Clics","Clics","Klicks","Cliques"],
+["Efficiency","Eficiencia","Efficacité","Effizienz","Eficiência"],
+["3BV / sec","3BV / s","3BV / s","3BV / s","3BV / s"],
+["3BV is the fewest clicks this board could be cleared in. Efficiency compares it with your clicks (flags count too).","El 3BV es el mínimo de clics para resolver este tablero. La eficiencia lo compara con tus clics (las banderas también cuentan).","Le 3BV est le nombre minimal de clics pour résoudre cette grille. L'efficacité le compare à tes clics (les drapeaux comptent aussi).","3BV ist die kleinste Klickzahl, mit der sich dieses Feld lösen lässt. Die Effizienz vergleicht sie mit deinen Klicks (Flaggen zählen mit).","O 3BV é o mínimo de cliques para resolver este tabuleiro. A eficiência compara isso com seus cliques (bandeiras também contam)."],
+["Where you hesitated","Dónde dudaste","Où tu as hésité","Wo du gezögert hast","Onde você hesitou"],
+["No long pauses. Smooth run.","Sin pausas largas. Partida fluida.","Pas de longue pause. Partie fluide.","Keine langen Pausen. Flüssiger Lauf.","Sem pausas longas. Partida fluida."],
+["{0}s before a reveal","{0} s antes de descubrir","{0} s avant une révélation","{0} s vor dem Aufdecken","{0}s antes de revelar"],
+["{0}s before a flag","{0} s antes de una bandera","{0} s avant un drapeau","{0} s vor einer Flagge","{0}s antes de uma bandeira"],
+["{0}s before a chord","{0} s antes de un acorde","{0} s avant un accord","{0} s vor einem Akkord","{0}s antes de um acorde"],
+["a single number settled it","un solo número lo resolvía","un seul nombre suffisait","eine einzelne Zahl hat es geklärt","um único número resolvia"],
+["a pattern across two numbers","un patrón entre dos números","un motif entre deux nombres","ein Muster aus zwei Zahlen","um padrão entre dois números"],
+["the mine count settled it","el contador de minas lo resolvía","le compte de mines suffisait","die Minenzahl hat es geklärt","a contagem de minas resolvia"],
+["nothing proved it yet (a guess)","nada lo demostraba aún (una suposición)","rien ne le prouvait encore (un coup au hasard)","noch nichts hat es bewiesen (geraten)","nada provava ainda (um chute)"],
+["Guesses","Suposiciones","Coups au hasard","Geraten","Chutes"],
+["None. Every reveal was provable when you made it.","Ninguna. Cada casilla descubierta era demostrable en ese momento.","Aucun. Chaque révélation était démontrable au moment où tu l'as faite.","Keine. Jedes Aufdecken war in dem Moment beweisbar.","Nenhum. Cada revelação era comprovável quando você a fez."],
+["1 reveal was made before logic could prove it safe, marked ? above. You got lucky: every board here can be solved without guessing.","Descubriste 1 casilla antes de que la lógica la demostrara segura (marcada con ? arriba). Tuviste suerte: todos los tableros se resuelven sin adivinar.","1 case a été révélée avant que la logique ne la prouve sûre (marquée ? ci-dessus). Tu as eu de la chance : toutes les grilles se résolvent sans hasard.","1 Feld wurde aufgedeckt, bevor die Logik es als sicher bewies (oben mit ? markiert). Glück gehabt: Jedes Feld hier ist ohne Raten lösbar.","1 casa foi revelada antes que a lógica a provasse segura (marcada com ? acima). Você teve sorte: todo tabuleiro aqui se resolve sem chutar."],
+["{0} reveals were made before logic could prove them safe, marked ? above. You got lucky: every board here can be solved without guessing.","Descubriste {0} casillas antes de que la lógica las demostrara seguras (marcadas con ? arriba). Tuviste suerte: todos los tableros se resuelven sin adivinar.","{0} cases ont été révélées avant que la logique ne les prouve sûres (marquées ? ci-dessus). Tu as eu de la chance : toutes les grilles se résolvent sans hasard.","{0} Felder wurden aufgedeckt, bevor die Logik sie als sicher bewies (oben mit ? markiert). Glück gehabt: Jedes Feld hier ist ohne Raten lösbar.","{0} casas foram reveladas antes que a lógica as provasse seguras (marcadas com ? acima). Você teve sorte: todo tabuleiro aqui se resolve sem chutar."],
+// achievements
+["Getting Serious","Va en serio","Ça devient sérieux","Jetzt wird's ernst","Agora é sério"],
+["Win an Intermediate board","Gana un tablero Intermedio","Gagne une grille Intermédiaire","Gewinne ein Fortgeschrittenen-Feld","Vença um tabuleiro Intermediário"],
+["Quick Draw","Gatillo rápido","Dégaine rapide","Schnellzieher","Saque rápido"],
+["Win Beginner in under 20 seconds","Gana en Principiante en menos de 20 segundos","Gagne en Débutant en moins de 20 secondes","Gewinne Anfänger in unter 20 Sekunden","Vença no Iniciante em menos de 20 segundos"],
+["Pacifist","Pacifista","Pacifiste","Pazifist","Pacifista"],
+["Win Intermediate or Expert without placing a flag","Gana en Intermedio o Experto sin poner banderas","Gagne en Intermédiaire ou Expert sans poser de drapeau","Gewinne Fortgeschritten oder Experte ohne Flagge","Vença no Intermediário ou Especialista sem colocar bandeiras"],
+["On a Roll","En racha","Sur une lancée","Lauf","Embalado"],
+["Win 5 boards in a row","Gana 5 tableros seguidos","Gagne 5 grilles d'affilée","Gewinne 5 Felder in Folge","Vença 5 tabuleiros seguidos"],
+["Expert Sweeper","Desminador experto","Démineur expert","Profi-Räumer","Especialista em minas"],
+["Win an Expert board","Gana un tablero Experto","Gagne une grille Expert","Gewinne ein Experten-Feld","Vença um tabuleiro Especialista"],
+["Explorer","Explorador","Explorateur","Entdecker","Explorador"],
+["Clear 1,000 cells in one Endless run","Despeja 1.000 casillas en una partida infinita","Dégage 1 000 cases en une partie infinie","Räume 1.000 Felder in einem Endlos-Lauf","Limpe 1.000 casas numa partida infinita"],
+["Cartographer","Cartógrafo","Cartographe","Kartograf","Cartógrafo"],
+["Clear 5,000 cells in one Endless run","Despeja 5.000 casillas en una partida infinita","Dégage 5 000 cases en une partie infinie","Räume 5.000 Felder in einem Endlos-Lauf","Limpe 5.000 casas numa partida infinita"],
+["Daily Grind","Rutina diaria","Routine quotidienne","Täglicher Trott","Rotina diária"],
+["Win all three dailies in one day","Gana los tres diarios en un mismo día","Gagne les trois grilles du jour le même jour","Gewinne alle drei Tagesfelder an einem Tag","Vença os três diários no mesmo dia"],
+["Lightning","Relámpago","Éclair","Blitz","Relâmpago"],
+["Win Intermediate in under 60 seconds","Gana en Intermedio en menos de 60 segundos","Gagne en Intermédiaire en moins de 60 secondes","Gewinne Fortgeschritten in unter 60 Sekunden","Vença no Intermediário em menos de 60 segundos"],
+["Master","Maestro","Maître","Meister","Mestre"],
+["Win Expert in under 3 minutes","Gana en Experto en menos de 3 minutos","Gagne en Expert en moins de 3 minutes","Gewinne Experte in unter 3 Minuten","Vença no Especialista em menos de 3 minutos"],
+["Veteran","Veterano","Vétéran","Veteran","Veterano"],
+["Win 25 boards","Gana 25 tableros","Gagne 25 grilles","Gewinne 25 Felder","Vença 25 tabuleiros"],
+["Flawless","Impecable","Sans faute","Makellos","Impecável"],
+["Clear a daily 7 days in a row","Completa un diario 7 días seguidos","Réussis une grille du jour 7 jours d'affilée","Löse 7 Tage in Folge ein Tagesfeld","Conclua um diário 7 dias seguidos"],
+["Devoted","Constante","Assidu","Treu","Dedicado"],
+["Complete five 7-day daily streaks","Completa cinco rachas diarias de 7 días","Termine cinq séries quotidiennes de 7 jours","Schaffe fünf 7-Tage-Serien","Complete cinco sequências diárias de 7 dias"],
+["Graduate","Graduado","Diplômé","Absolvent","Formado"],
+["Finish the Beginner campaign","Termina la campaña Principiante","Termine la campagne Débutant","Schließe die Anfänger-Kampagne ab","Termine a campanha Iniciante"],
+["Honours","Matrícula","Mention","Auszeichnung","Honras"],
+["Finish the Intermediate campaign","Termina la campaña Intermedio","Termine la campagne Intermédiaire","Schließe die Fortgeschrittenen-Kampagne ab","Termine a campanha Intermediário"],
+["Valedictorian","Primero de la clase","Major de promo","Jahrgangsbester","Orador da turma"],
+["Finish the Expert campaign","Termina la campaña Experto","Termine la campagne Expert","Schließe die Experten-Kampagne ab","Termine a campanha Especialista"],
+["Perfectionist","Perfeccionista","Perfectionniste","Perfektionist","Perfeccionista"],
+["Earn all 3 stars on every level of a campaign","Consigue las 3 estrellas en todos los niveles de una campaña","Obtiens les 3 étoiles à chaque niveau d'une campagne","Hol alle 3 Sterne in jedem Level einer Kampagne","Ganhe as 3 estrelas em todos os níveis de uma campanha"],
+["Shapeshifter","Cambiaformas","Métamorphe","Gestaltwandler","Metamorfo"],
+["Win on all seven board shapes","Gana en las siete formas de tablero","Gagne sur les sept formes de grille","Gewinne auf allen sieben Feldformen","Vença nos sete formatos de tabuleiro"],
+["Puzzle Master","Maestro de puzles","Maître des puzzles","Rätselmeister","Mestre dos quebra-cabeças"],
+["Earn 3 stars on all three puzzle levels","Consigue 3 estrellas en los tres niveles puzle","Obtiens 3 étoiles aux trois niveaux puzzle","Hol 3 Sterne in allen drei Rätsel-Levels","Ganhe 3 estrelas nos três níveis de quebra-cabeça"],
+["Podium Finish","Podio","Podium","Treppchen","Pódio"],
+["Finish a league round in the top 3, ahead of at least one player","Acaba una ronda de liga entre los 3 primeros, por delante de al menos un jugador","Termine une manche de ligue dans le top 3, devant au moins un joueur","Beende eine Ligarunde unter den ersten 3, vor mindestens einem Spieler","Termine uma rodada da liga entre os 3 primeiros, à frente de pelo menos um jogador"],
+["Contender","Aspirante","Prétendant","Herausforderer","Candidato"],
+["Finish a league round in the top 2, ahead of at least one player","Acaba una ronda de liga entre los 2 primeros, por delante de al menos un jugador","Termine une manche de ligue dans le top 2, devant au moins un joueur","Beende eine Ligarunde unter den ersten 2, vor mindestens einem Spieler","Termine uma rodada da liga entre os 2 primeiros, à frente de pelo menos um jogador"],
+["Round Winner","Ganador de ronda","Vainqueur de manche","Rundensieger","Vencedor da rodada"],
+["Win a league round, ahead of at least one player","Gana una ronda de liga, por delante de al menos un jugador","Gagne une manche de ligue, devant au moins un joueur","Gewinne eine Ligarunde, vor mindestens einem Spieler","Vença uma rodada da liga, à frente de pelo menos um jogador"],
+["Podium Week","Semana de podio","Semaine sur le podium","Treppchen-Woche","Semana no pódio"],
+["Top 3 in 7 league rounds in a row","Top 3 en 7 rondas de liga seguidas","Top 3 sur 7 manches de ligue d'affilée","Top 3 in 7 Ligarunden in Folge","Top 3 em 7 rodadas da liga seguidas"],
+["Contender Week","Semana de aspirante","Semaine de prétendant","Herausforderer-Woche","Semana de candidato"],
+["Top 2 in 7 league rounds in a row","Top 2 en 7 rondas de liga seguidas","Top 2 sur 7 manches de ligue d'affilée","Top 2 in 7 Ligarunden in Folge","Top 2 em 7 rodadas da liga seguidas"],
+["Unbeaten Week","Semana invicta","Semaine invaincue","Ungeschlagene Woche","Semana invicta"],
+["Win 7 league rounds in a row","Gana 7 rondas de liga seguidas","Gagne 7 manches de ligue d'affilée","Gewinne 7 Ligarunden in Folge","Vença 7 rodadas da liga seguidas"],
+["Podium Regular","Habitual del podio","Habitué du podium","Treppchen-Stammgast","Frequentador do pódio"],
+["Top 3 in 30 league rounds","Top 3 en 30 rondas de liga","Top 3 sur 30 manches de ligue","Top 3 in 30 Ligarunden","Top 3 em 30 rodadas da liga"],
+["Contender Regular","Aspirante habitual","Prétendant régulier","Dauer-Herausforderer","Candidato frequente"],
+["Top 2 in 30 league rounds","Top 2 en 30 rondas de liga","Top 2 sur 30 manches de ligue","Top 2 in 30 Ligarunden","Top 2 em 30 rodadas da liga"],
+["Dynasty","Dinastía","Dynastie","Dynastie","Dinastia"],
+["Win 30 league rounds","Gana 30 rondas de liga","Gagne 30 manches de ligue","Gewinne 30 Ligarunden","Vença 30 rodadas da liga"],
+["Season Podium","Podio de temporada","Podium de saison","Saison-Treppchen","Pódio da temporada"],
+["Finish a league season in the top 3, ahead of at least one player","Acaba una temporada de liga entre los 3 primeros, por delante de al menos un jugador","Termine une saison de ligue dans le top 3, devant au moins un joueur","Beende eine Ligasaison unter den ersten 3, vor mindestens einem Spieler","Termine uma temporada da liga entre os 3 primeiros, à frente de pelo menos um jogador"],
+["Season Champion","Campeón de temporada","Champion de saison","Saisonmeister","Campeão da temporada"],
+["Win a league season, ahead of at least one player","Gana una temporada de liga, por delante de al menos un jugador","Gagne une saison de ligue, devant au moins un joueur","Gewinne eine Ligasaison, vor mindestens einem Spieler","Vença uma temporada da liga, à frente de pelo menos um jogador"],
+["Rival","Rival","Rival","Rivale","Rival"],
+["Beat a friend's time on their challenge board","Supera el tiempo de un amigo en su tablero de reto","Bats le temps d'un ami sur sa grille de défi","Schlag die Zeit eines Freundes auf seinem Challenge-Feld","Bata o tempo de um amigo no tabuleiro do desafio dele"],
+["Regular","Habitual","Régulier","Stammgast","Frequente"],
+["Earn 5 weekly challenge badges","Consigue 5 insignias de retos semanales","Obtiens 5 badges de défi hebdo","Sammle 5 Abzeichen der Wochen-Challenge","Ganhe 5 emblemas de desafios semanais"],
+["Rule Bender","Rompereglas","Briseur de règles","Regelbrecher","Quebra-regras"],
+["Win a Hex, Wraparound, Knight's move and Double mines board","Gana un tablero Hex, Envolvente, Caballo y Minas dobles","Gagne une grille Hex, Torique, Cavalier et Mines doubles","Gewinne je ein Feld mit Hex, Ränder verbunden, Springerzug und Doppelminen","Vença um tabuleiro Hex, Contínuo, Cavalo e Minas duplas"],
+["First Sweep","Primera limpieza","Premier déminage","Erster Sieg","Primeira limpeza"],
+["Win any board","Gana cualquier tablero","Gagne n'importe quelle grille","Gewinne ein beliebiges Feld","Vença qualquer tabuleiro"],
+["Unlock: {0}","Desbloqueo: {0}","Déblocage : {0}","Freischalten: {0}","Desbloqueio: {0}"],
+// expeditions
+["First Steps","Primeros pasos","Premiers pas","Erste Schritte","Primeiros passos"],
+["Clear 500 cells in one run","Despeja 500 casillas en una partida","Dégage 500 cases en une partie","Räume 500 Felder in einem Lauf","Limpe 500 casas numa partida"],
+["Trailblazer","Pionero","Pionnier","Wegbereiter","Desbravador"],
+["Travel 50 tiles from your starting point in one run","Aléjate 50 casillas de tu punto de partida en una partida","Éloigne-toi de 50 cases de ton départ en une partie","Entferne dich in einem Lauf 50 Felder vom Start","Afaste-se 50 casas do ponto de partida numa partida"],
+["Light Touch","Toque suave","Doigté léger","Leichte Hand","Toque leve"],
+["Clear 750 cells in one run without placing a flag","Despeja 750 casillas en una partida sin poner banderas","Dégage 750 cases en une partie sans poser de drapeau","Räume 750 Felder in einem Lauf ohne Flagge","Limpe 750 casas numa partida sem colocar bandeiras"],
+["Clean Sweep","Limpieza total","Grand ménage","Saubere Sache","Limpeza total"],
+["Clear 1,000 cells in one run without using a hint","Despeja 1.000 casillas en una partida sin usar pistas","Dégage 1 000 cases en une partie sans indice","Räume 1.000 Felder in einem Lauf ohne Tipp","Limpe 1.000 casas numa partida sem usar dicas"],
+["Deep Diver","Buceador","Plongeur","Tiefseetaucher","Mergulhador"],
+["Clear 2,500 cells in one Dense run","Despeja 2.500 casillas en una partida densa","Dégage 2 500 cases en une partie dense","Räume 2.500 Felder in einem dichten Lauf","Limpe 2.500 casas numa partida densa"],
+["Marathon","Maratón","Marathon","Marathon","Maratona"],
+["Reach 20 milestones across all your runs","Alcanza 20 hitos sumando todas tus partidas","Atteins 20 étapes sur l'ensemble de tes parties","Erreiche 20 Meilensteine über alle Läufe","Alcance 20 marcos somando todas as partidas"],
+// weekly challenges
+["Hex Week","Semana Hex","Semaine Hex","Hex-Woche","Semana Hex"],
+["Win an Intermediate board with Hex rules.","Gana un tablero Intermedio con reglas Hex.","Gagne une grille Intermédiaire en règles Hex.","Gewinne ein Fortgeschrittenen-Feld mit Hex-Regeln.","Vença um tabuleiro Intermediário com regras Hex."],
+["Hands Off","Manos fuera","Sans les mains","Finger weg","Sem as mãos"],
+["Win Intermediate without placing a flag.","Gana en Intermedio sin poner banderas.","Gagne en Intermédiaire sans poser de drapeau.","Gewinne Fortgeschritten ohne Flagge.","Vença no Intermediário sem colocar bandeiras."],
+["Speed Run","Contrarreloj","Course contre la montre","Speedrun","Corrida contra o tempo"],
+["Win a standard Intermediate board in under 2 minutes.","Gana un tablero Intermedio estándar en menos de 2 minutos.","Gagne une grille Intermédiaire standard en moins de 2 minutes.","Gewinne ein normales Fortgeschrittenen-Feld in unter 2 Minuten.","Vença um tabuleiro Intermediário padrão em menos de 2 minutos."],
+["Around the World","La vuelta al mundo","Le tour du monde","Einmal um die Welt","Volta ao mundo"],
+["Win an Intermediate board with Wraparound rules.","Gana un tablero Intermedio con reglas Envolvente.","Gagne une grille Intermédiaire en règles Torique.","Gewinne ein Fortgeschrittenen-Feld mit verbundenen Rändern.","Vença um tabuleiro Intermediário com regras Contínuo."],
+["Knight Shift","Turno del caballo","Le tour du cavalier","Springer-Schicht","Turno do cavalo"],
+["Win an Intermediate board with Knight's move rules.","Gana un tablero Intermedio con reglas de Caballo.","Gagne une grille Intermédiaire en règles Cavalier.","Gewinne ein Fortgeschrittenen-Feld mit Springerzug-Regeln.","Vença um tabuleiro Intermediário com regras de Cavalo."],
+["Double Trouble","Doble problema","Double peine","Doppelter Ärger","Problema duplo"],
+["Win an Intermediate board with Double mines.","Gana un tablero Intermedio con Minas dobles.","Gagne une grille Intermédiaire avec Mines doubles.","Gewinne ein Fortgeschrittenen-Feld mit Doppelminen.","Vença um tabuleiro Intermediário com Minas duplas."],
+["Odd Shapes","Formas raras","Formes bizarres","Seltsame Formen","Formas estranhas"],
+["Win an Intermediate board on a random shape.","Gana un tablero Intermedio con forma aleatoria.","Gagne une grille Intermédiaire de forme aléatoire.","Gewinne ein Fortgeschrittenen-Feld mit zufälliger Form.","Vença um tabuleiro Intermediário com formato aleatório."],
+["Efficient","Eficiente","Efficace","Effizient","Eficiente"],
+["Win Intermediate with 80% efficiency or better.","Gana en Intermedio con un 80% de eficiencia o más.","Gagne en Intermédiaire avec 80 % d'efficacité ou plus.","Gewinne Fortgeschritten mit mindestens 80 % Effizienz.","Vença no Intermediário com 80% de eficiência ou mais."],
+["Unaided","Sin ayuda","Sans aide","Ohne Hilfe","Sem ajuda"],
+["Win an Expert board without a hint.","Gana un tablero Experto sin pistas.","Gagne une grille Expert sans indice.","Gewinne ein Experten-Feld ohne Tipp.","Vença um tabuleiro Especialista sem dicas."],
+["Long Haul","Larga distancia","Longue haleine","Langstrecke","Longa jornada"],
+["Clear 1,000 cells in one Endless run.","Despeja 1.000 casillas en una partida infinita.","Dégage 1 000 cases en une partie infinie.","Räume 1.000 Felder in einem Endlos-Lauf.","Limpe 1.000 casas numa partida infinita."],
+["Weekly badge: {0}","Insignia semanal: {0}","Badge hebdo : {0}","Wochenabzeichen: {0}","Emblema semanal: {0}"],
+["+{0} XP · {1} badge so far","+{0} XP · {1} insignia hasta ahora","+{0} XP · {1} badge pour l'instant","+{0} XP · bisher {1} Abzeichen","+{0} XP · {1} emblema até agora"],
+["+{0} XP · {1} badges so far","+{0} XP · {1} insignias hasta ahora","+{0} XP · {1} badges pour l'instant","+{0} XP · bisher {1} Abzeichen","+{0} XP · {1} emblemas até agora"]
+);
+
+// League, challenges, sharing, backups, privacy and What's new.
+I18N_ROWS.push(
+// ---- league ----
+["League","Liga","Ligue","Liga","Liga"],
+["League {0}","Liga {0}","Ligue {0}","Liga {0}","Liga {0}"],
+["Join League {0}","Unirse a la Liga {0}","Rejoindre la Ligue {0}","Liga {0} beitreten","Entrar na Liga {0}"],
+["A shared board every day. Stars decide the table.","Un tablero compartido cada día. Las estrellas deciden la clasificación.","Une grille partagée chaque jour. Les étoiles font le classement.","Jeden Tag ein gemeinsames Feld. Sterne entscheiden die Tabelle.","Um tabuleiro compartilhado por dia. As estrelas decidem a tabela."],
+["Every day there's a new round: the same Intermediate board for every player, one attempt. Each round earns up to three stars: reach {0}% (even if you then hit a mine), clear the board, and clear it with no hints in under {1}. The season table adds up your stars.","Cada día hay una ronda nueva: el mismo tablero Intermedio para todos, un solo intento. Cada ronda da hasta tres estrellas: llegar al {0}% (aunque luego pises una mina), completar el tablero y completarlo sin pistas en menos de {1}. La clasificación de la temporada suma tus estrellas.","Chaque jour, une nouvelle manche : la même grille Intermédiaire pour tous, un seul essai. Chaque manche rapporte jusqu'à trois étoiles : atteindre {0} % (même si tu touches une mine ensuite), finir la grille, et la finir sans indice en moins de {1}. Le classement de la saison additionne tes étoiles.","Jeden Tag gibt es eine neue Runde: dasselbe Fortgeschrittenen-Feld für alle, ein Versuch. Jede Runde bringt bis zu drei Sterne: {0} % erreichen (auch wenn du danach eine Mine triffst), das Feld lösen und es ohne Tipp in unter {1} lösen. Die Saisontabelle zählt deine Sterne.","Todo dia há uma rodada nova: o mesmo tabuleiro Intermediário para todos, uma tentativa. Cada rodada vale até três estrelas: chegar a {0}% (mesmo que depois você pise numa mina), concluir o tabuleiro e concluí-lo sem dicas em menos de {1}. A tabela da temporada soma suas estrelas."],
+["League name","Nombre en la liga","Nom dans la ligue","Liganame","Nome na liga"],
+["Pick a name","Elige un nombre","Choisis un nom","Wähle einen Namen","Escolha um nome"],
+["Pick a name first.","Elige un nombre primero.","Choisis d'abord un nom.","Wähle zuerst einen Namen.","Escolha um nome primeiro."],
+["Your name is locked until League {0} ends on {1}.","Tu nombre queda fijado hasta que la Liga {0} termine el {1}.","Ton nom est verrouillé jusqu'à la fin de la Ligue {0}, le {1}.","Dein Name ist gesperrt, bis Liga {0} am {1} endet.","Seu nome fica travado até a Liga {0} terminar em {1}."],
+["Welcome to League {0}, {1}!","¡Bienvenido a la Liga {0}, {1}!","Bienvenue dans la Ligue {0}, {1} !","Willkommen in Liga {0}, {1}!","Bem-vindo à Liga {0}, {1}!"],
+["{0} · Round {1} of {2} · {3}","{0} · Ronda {1} de {2} · {3}","{0} · Manche {1} sur {2} · {3}","{0} · Runde {1} von {2} · {3}","{0} · Rodada {1} de {2} · {3}"],
+["You're not in this league yet","Aún no estás en esta liga","Tu n'es pas encore dans cette ligue","Du bist noch nicht in dieser Liga","Você ainda não está nesta liga"],
+["Join to play today's round and appear in the table.","Únete para jugar la ronda de hoy y aparecer en la clasificación.","Rejoins-la pour jouer la manche du jour et apparaître au classement.","Tritt bei, um die heutige Runde zu spielen und in der Tabelle zu stehen.","Entre para jogar a rodada de hoje e aparecer na tabela."],
+["Table","Clasificación","Classement","Tabelle","Tabela"],
+["Round {0}","Ronda {0}","Manche {0}","Runde {0}","Rodada {0}"],
+["Play Round {0}","Jugar la ronda {0}","Jouer la manche {0}","Runde {0} spielen","Jogar a rodada {0}"],
+["Round {0} is ready · one attempt","La ronda {0} está lista · un intento","La manche {0} est prête · un seul essai","Runde {0} ist bereit · ein Versuch","A rodada {0} está pronta · uma tentativa"],
+["Round {0} in progress · tap to continue","Ronda {0} en curso · toca para seguir","Manche {0} en cours · touche pour continuer","Runde {0} läuft · tippen zum Fortsetzen","Rodada {0} em andamento · toque para continuar"],
+["Round {0} done · share your code to add rivals","Ronda {0} hecha · comparte tu código para sumar rivales","Manche {0} terminée · partage ton code pour ajouter des rivaux","Runde {0} erledigt · teile deinen Code für mehr Rivalen","Rodada {0} feita · compartilhe seu código para somar rivais"],
+["Round {0} done · {1} of {2} in the table","Ronda {0} hecha · {1} de {2} en la clasificación","Manche {0} terminée · {1} sur {2} au classement","Runde {0} erledigt · Platz {1} von {2}","Rodada {0} feita · {1} de {2} na tabela"],
+["Round {0} {1}","Ronda {0} {1}","Manche {0} {1}","Runde {0} {1}","Rodada {0} {1}"],
+["Season","Temporada","Saison","Saison","Temporada"],
+["League {0} · Round {1}","Liga {0} · Ronda {1}","Ligue {0} · Manche {1}","Liga {0} · Runde {1}","Liga {0} · Rodada {1}"],
+["League {0} · Round {1}. Same board for every player. Start on the glowing tile. One attempt!","Liga {0} · Ronda {1}. El mismo tablero para todos. Empieza en la casilla brillante. ¡Un solo intento!","Ligue {0} · Manche {1}. La même grille pour tous. Commence par la case lumineuse. Un seul essai !","Liga {0} · Runde {1}. Dasselbe Feld für alle. Starte auf dem leuchtenden Feld. Nur ein Versuch!","Liga {0} · Rodada {1}. O mesmo tabuleiro para todos. Comece pela casa brilhante. Só uma tentativa!"],
+["{0} round","{0} ronda","{0} manche","{0} Runde","{0} rodada"],
+["{0} rounds","{0} rondas","{0} manches","{0} Runden","{0} rodadas"],
+["{0} player has played Round {1}. Play to see their results.","{0} jugador ha jugado la ronda {1}. Juega para ver los resultados.","{0} joueur a joué la manche {1}. Joue pour voir les résultats.","{0} Spieler hat Runde {1} gespielt. Spiel, um die Ergebnisse zu sehen.","{0} jogador já jogou a rodada {1}. Jogue para ver os resultados."],
+["{0} players have played Round {1}. Play to see their results.","{0} jugadores han jugado la ronda {1}. Juega para ver los resultados.","{0} joueurs ont joué la manche {1}. Joue pour voir les résultats.","{0} Spieler haben Runde {1} gespielt. Spiel, um die Ergebnisse zu sehen.","{0} jogadores já jogaram a rodada {1}. Jogue para ver os resultados."],
+["No players yet. Join and share your code to start the table.","Aún no hay jugadores. Únete y comparte tu código para empezar la clasificación.","Pas encore de joueurs. Rejoins et partage ton code pour lancer le classement.","Noch keine Spieler. Tritt bei und teile deinen Code, um die Tabelle zu starten.","Ainda não há jogadores. Entre e compartilhe seu código para começar a tabela."],
+["No results for this round yet.","Aún no hay resultados en esta ronda.","Pas encore de résultats pour cette manche.","Noch keine Ergebnisse für diese Runde.","Ainda não há resultados nesta rodada."],
+["💥 at {0}%","💥 al {0}%","💥 à {0} %","💥 bei {0} %","💥 em {0}%"],
+["(you)","(tú)","(toi)","(du)","(você)"],
+["Share my season","Compartir mi temporada","Partager ma saison","Meine Saison teilen","Compartilhar minha temporada"],
+["Add league results","Añadir resultados de la liga","Ajouter des résultats de ligue","Liga-Ergebnisse hinzufügen","Adicionar resultados da liga"],
+["Paste a friend's message, or a whole group chat. Every league link in it gets added.","Pega el mensaje de un amigo o un chat de grupo entero. Se añadirán todos los enlaces de liga.","Colle le message d'un ami, ou toute une discussion de groupe. Chaque lien de ligue sera ajouté.","Füge die Nachricht eines Freundes oder einen ganzen Gruppenchat ein. Jeder Liga-Link darin wird übernommen.","Cole a mensagem de um amigo ou um chat de grupo inteiro. Todo link da liga será adicionado."],
+["Add results","Añadir resultados","Ajouter les résultats","Ergebnisse hinzufügen","Adicionar resultados"],
+["Round placements","Puestos por ronda","Places par manche","Rundenplatzierungen","Colocações por rodada"],
+["Winner","Ganador","Vainqueur","Sieger","Vencedor"],
+["Top 2","Top 2","Top 2","Top 2","Top 2"],
+["Top 3","Top 3","Top 3","Top 3","Top 3"],
+["{0}/7 in a row","{0}/7 seguidas","{0}/7 d'affilée","{0}/7 in Folge","{0}/7 seguidas"],
+["{0}/30 total","{0}/30 en total","{0}/30 au total","{0}/30 insgesamt","{0}/30 no total"],
+["Trophy cabinet","Vitrina de trofeos","Vitrine à trophées","Trophäenschrank","Galeria de troféus"],
+["Stars per round: {0}. Ties go to more total progress, then the faster total time. Round placements lock at midnight and count only if you beat at least one player; a round win also counts toward Top 2 and Top 3. Season results lock at the end of the 1st of next month.","Estrellas por ronda: {0}. Los empates se deciden por más progreso total y luego por menor tiempo total. Los puestos de cada ronda se cierran a medianoche y solo cuentan si superas al menos a un jugador; ganar una ronda también cuenta para el Top 2 y el Top 3. La temporada se cierra al final del día 1 del mes siguiente.","Étoiles par manche : {0}. En cas d'égalité, le plus de progression totale l'emporte, puis le temps total le plus court. Les places de chaque manche sont figées à minuit et ne comptent que si tu bats au moins un joueur ; une victoire de manche compte aussi pour le Top 2 et le Top 3. La saison est figée à la fin du 1er du mois suivant.","Sterne pro Runde: {0}. Bei Gleichstand zählt mehr Gesamtfortschritt, dann die schnellere Gesamtzeit. Rundenplätze werden um Mitternacht festgelegt und zählen nur, wenn du mindestens einen Spieler schlägst; ein Rundensieg zählt auch für Top 2 und Top 3. Die Saison wird am Ende des 1. des Folgemonats festgelegt.","Estrelas por rodada: {0}. Empates vão para quem tem mais progresso total e depois menor tempo total. As colocações de cada rodada fecham à meia-noite e só contam se você superar pelo menos um jogador; vencer uma rodada também conta para o Top 2 e o Top 3. A temporada fecha no fim do dia 1º do mês seguinte."],
+["★ reach {0}% (even if you hit a mine) · ★ clear it · ★ no hints and under 2:30","★ llega al {0}% (aunque pises una mina) · ★ complétalo · ★ sin pistas y en menos de 2:30","★ atteins {0} % (même en touchant une mine) · ★ finis-la · ★ sans indice et en moins de 2:30","★ erreiche {0} % (auch wenn du eine Mine triffst) · ★ löse es · ★ ohne Tipp und unter 2:30","★ chegue a {0}% (mesmo se pisar numa mina) · ★ conclua · ★ sem dicas e em menos de 2:30"],
+["Perfect round","Ronda perfecta","Manche parfaite","Perfekte Runde","Rodada perfeita"],
+["Table: {0} of {1}","Clasificación: {0} de {1}","Classement : {0} sur {1}","Tabelle: Platz {0} von {1}","Tabela: {0} de {1}"],
+["Table: {0} of {1} · Round: {2} of {3} so far","Clasificación: {0} de {1} · Ronda: {2} de {3} por ahora","Classement : {0} sur {1} · Manche : {2} sur {3} pour l'instant","Tabelle: Platz {0} von {1} · Runde: bisher Platz {2} von {3}","Tabela: {0} de {1} · Rodada: {2} de {3} até agora"],
+["No other players yet. Share your season code and ask friends to join.","Aún no hay más jugadores. Comparte tu código de temporada y pide a tus amigos que se unan.","Pas encore d'autres joueurs. Partage ton code de saison et invite tes amis.","Noch keine anderen Spieler. Teile deinen Saisoncode und lade Freunde ein.","Ainda não há outros jogadores. Compartilhe seu código da temporada e chame amigos."],
+["Share with the league","Compartir con la liga","Partager avec la ligue","Mit der Liga teilen","Compartilhar com a liga"],
+["League table","Clasificación de la liga","Classement de la ligue","Ligatabelle","Tabela da liga"],
+["Your link carries every round you've played this month. One tap brings a friend's table up to date, so share it whenever you like.","Tu enlace incluye todas las rondas que has jugado este mes. Con un toque, la clasificación de tu amigo se pone al día, así que compártelo cuando quieras.","Ton lien contient toutes les manches jouées ce mois-ci. Un seul toucher met à jour le classement d'un ami, alors partage-le quand tu veux.","Dein Link enthält jede Runde, die du diesen Monat gespielt hast. Ein Tipp bringt die Tabelle eines Freundes auf den neuesten Stand, also teile ihn, wann du willst.","Seu link traz todas as rodadas que você jogou neste mês. Um toque atualiza a tabela de um amigo, então compartilhe quando quiser."],
+["Playing as {0} · locked for League {1}","Juegas como {0} · fijado para la Liga {1}","Tu joues sous le nom {0} · verrouillé pour la Ligue {1}","Du spielst als {0} · gesperrt für Liga {1}","Jogando como {0} · travado na Liga {1}"],
+["The link holds your league name, your round times and a random player ID. Nothing else about you, and no account.","El enlace contiene tu nombre en la liga, tus tiempos y un ID de jugador aleatorio. Nada más sobre ti, y sin cuenta.","Le lien contient ton nom de ligue, tes temps de manche et un identifiant aléatoire. Rien d'autre sur toi, et aucun compte.","Der Link enthält deinen Liganamen, deine Rundenzeiten und eine zufällige Spieler-ID. Sonst nichts über dich, und kein Konto.","O link contém seu nome na liga, seus tempos e um ID de jogador aleatório. Nada mais sobre você, e sem conta."],
+["Sweep League {0}","Sweep Liga {0}","Sweep Ligue {0}","Sweep Liga {0}","Sweep Liga {0}"],
+["Sweep League {0} · Round {1} · {2}","Sweep Liga {0} · Ronda {1} · {2}","Sweep Ligue {0} · Manche {1} · {2}","Sweep Liga {0} · Runde {1} · {2}","Sweep Liga {0} · Rodada {1} · {2}"],
+["Season: {0}★ from {1} round","Temporada: {0}★ en {1} ronda","Saison : {0}★ en {1} manche","Saison: {0}★ aus {1} Runde","Temporada: {0}★ em {1} rodada"],
+["Season: {0}★ from {1} rounds","Temporada: {0}★ en {1} rondas","Saison : {0}★ en {1} manches","Saison: {0}★ aus {1} Runden","Temporada: {0}★ em {1} rodadas"],
+["Tap to update my results in your league: {0}","Toca para actualizar mis resultados en tu liga: {0}","Touche pour mettre à jour mes résultats dans ta ligue : {0}","Tippe, um meine Ergebnisse in deiner Liga zu aktualisieren: {0}","Toque para atualizar meus resultados na sua liga: {0}"],
+["{0} added to the league","{0} se ha unido a la liga","{0} ajouté à la ligue","{0} zur Liga hinzugefügt","{0} entrou na liga"],
+["{0} players added","{0} jugadores añadidos","{0} joueurs ajoutés","{0} Spieler hinzugefügt","{0} jogadores adicionados"],
+["{0} updated","{0} actualizados","{0} mis à jour","{0} aktualisiert","{0} atualizados"],
+["Nothing new","Nada nuevo","Rien de nouveau","Nichts Neues","Nada de novo"],
+["that one's yours","ese es tuyo","celui-là est à toi","das ist deiner","esse é seu"],
+["{0} from a different game version (ask them to update)","{0} de otra versión del juego (pídeles que actualicen)","{0} d'une autre version du jeu (demande-leur de mettre à jour)","{0} aus einer anderen Spielversion (bitte sie zu aktualisieren)","{0} de outra versão do jogo (peça para atualizarem)"],
+["{0} arrived after that season ended","{0} llegaron después de acabar la temporada","{0} reçus après la fin de cette saison","{0} kamen nach Saisonende","{0} chegaram depois do fim da temporada"],
+["{0} from an old season","{0} de una temporada antigua","{0} d'une ancienne saison","{0} aus einer alten Saison","{0} de uma temporada antiga"],
+["{0} couldn't be read","{0} no se pudieron leer","{0} illisibles","{0} nicht lesbar","{0} não puderam ser lidos"],
+["No league results found in that text","No hay resultados de liga en ese texto","Aucun résultat de ligue dans ce texte","Kein Liga-Ergebnis in diesem Text gefunden","Nenhum resultado da liga nesse texto"],
+["League · Round {0}: {1} of {2} (final)","Liga · Ronda {0}: {1} de {2} (final)","Ligue · Manche {0} : {1} sur {2} (final)","Liga · Runde {0}: Platz {1} von {2} (final)","Liga · Rodada {0}: {1} de {2} (final)"],
+["League {0} is over","La Liga {0} ha terminado","La Ligue {0} est terminée","Liga {0} ist vorbei","A Liga {0} acabou"],
+["{0} · {1} players","{0} · {1} jugadores","{0} · {1} joueurs","{0} · {1} Spieler","{0} · {1} jogadores"],
+["{0} · {1} player","{0} · {1} jugador","{0} · {1} joueur","{0} · {1} Spieler","{0} · {1} jogador"],
+["Your place","Tu puesto","Ta place","Dein Platz","Sua posição"],
+["Season bonus","Bonus de temporada","Bonus de saison","Saisonbonus","Bônus da temporada"],
+["Season rewards need you to finish ahead of at least one player.","Para los premios de temporada debes acabar por delante de al menos un jugador.","Pour les récompenses de saison, il faut finir devant au moins un joueur.","Für Saisonbelohnungen musst du vor mindestens einem Spieler landen.","Para as recompensas da temporada, você precisa terminar à frente de pelo menos um jogador."],
+["Final table · you finished {0} of {1}","Clasificación final · acabaste {0} de {1}","Classement final · tu as fini {0} sur {1}","Endtabelle · du wurdest {0} von {1}","Tabela final · você terminou em {0} de {1}"],
+["Final table · you didn't play","Clasificación final · no jugaste","Classement final · tu n'as pas joué","Endtabelle · du hast nicht gespielt","Tabela final · você não jogou"],
+["Final results lock at the end of the 1st. Late codes still count until then.","Los resultados finales se cierran al acabar el día 1. Hasta entonces cuentan los códigos tardíos.","Les résultats finaux sont figés à la fin du 1er. Les codes en retard comptent jusque-là.","Die Endergebnisse werden am Ende des 1. festgelegt. Bis dahin zählen späte Codes noch.","Os resultados finais fecham no fim do dia 1º. Até lá, códigos atrasados ainda contam."],
+// ---- challenges ----
+["Paste a challenge a friend sent you. You'll play their exact board and see whose time is faster.","Pega el reto que te envió un amigo. Jugarás exactamente su tablero y veréis quién es más rápido.","Colle le défi qu'un ami t'a envoyé. Tu joueras exactement sa grille et vous verrez qui est le plus rapide.","Füge eine Challenge ein, die dir ein Freund geschickt hat. Du spielst genau sein Feld und seht, wer schneller ist.","Cole um desafio que um amigo enviou. Você vai jogar exatamente o tabuleiro dele e ver quem é mais rápido."],
+["Paste the whole message or just the SWC1 code","Pega el mensaje entero o solo el código SWC1","Colle le message entier ou juste le code SWC1","Füge die ganze Nachricht oder nur den SWC1-Code ein","Cole a mensagem inteira ou só o código SWC1"],
+["Play challenge","Jugar reto","Jouer le défi","Challenge spielen","Jogar desafio"],
+["To send one, win any board (not a daily) and tap Share.","Para enviar uno, gana cualquier tablero (que no sea diario) y toca Compartir.","Pour en envoyer un, gagne une grille (hors grille du jour) et touche Partager.","Um eine zu senden, gewinne ein Feld (kein Tagesfeld) und tippe auf Teilen.","Para enviar um, vença qualquer tabuleiro (menos diário) e toque em Compartilhar."],
+["No challenge code found. Check it was copied in full.","No se encontró ningún código de reto. Comprueba que se copió entero.","Aucun code de défi trouvé. Vérifie qu'il a été copié en entier.","Kein Challenge-Code gefunden. Prüfe, ob er vollständig kopiert wurde.","Nenhum código de desafio encontrado. Verifique se foi copiado inteiro."],
+["{0} cleared this in {1}. Start on the glowing tile.","{0} lo completó en {1}. Empieza en la casilla brillante.","{0} l'a réussie en {1}. Commence par la case lumineuse.","{0} hat es in {1} gelöst. Starte auf dem leuchtenden Feld.","{0} concluiu em {1}. Comece pela casa brilhante."],
+["A friend cleared this in {0}. Start on the glowing tile.","Un amigo lo completó en {0}. Empieza en la casilla brillante.","Un ami l'a réussie en {0}. Commence par la case lumineuse.","Ein Freund hat es in {0} gelöst. Starte auf dem leuchtenden Feld.","Um amigo concluiu em {0}. Comece pela casa brilhante."],
+["Challenge · {0}","Reto · {0}","Défi · {0}","Challenge · {0}","Desafio · {0}"],
+["You","Tú","Toi","Du","Você"],
+["Your friend","Tu amigo","Ton ami","Dein Freund","Seu amigo"],
+["Faster by {0}.","Más rápido por {0}.","Plus rapide de {0}.","Um {0} schneller.","Mais rápido por {0}."],
+["{0} behind. Try again: it's the same board.","{0} por detrás. Inténtalo otra vez: es el mismo tablero.","{0} de retard. Réessaie : c'est la même grille.","{0} zurück. Versuch's nochmal: Es ist dasselbe Feld.","{0} atrás. Tente de novo: é o mesmo tabuleiro."],
+["Hinted runs can't beat a challenge, but you cleared it.","Las partidas con pistas no pueden ganar un reto, pero lo completaste.","Une partie avec indices ne peut pas gagner un défi, mais tu l'as réussie.","Mit Tipps kannst du keine Challenge gewinnen, aber du hast es gelöst.","Partidas com dicas não vencem um desafio, mas você concluiu."],
+["Play it again","Jugar otra vez","Rejouer","Nochmal spielen","Jogar de novo"],
+["Send back","Responder","Renvoyer","Zurückschicken","Devolver"],
+["{0} cleared it in {1}. It's the same board every try.","{0} lo completó en {1}. Es el mismo tablero en cada intento.","{0} l'a réussie en {1}. C'est la même grille à chaque essai.","{0} hat es in {1} gelöst. Es ist bei jedem Versuch dasselbe Feld.","{0} concluiu em {1}. É o mesmo tabuleiro em toda tentativa."],
+["Your friend cleared it in {0}. It's the same board every try.","Tu amigo lo completó en {0}. Es el mismo tablero en cada intento.","Ton ami l'a réussie en {0}. C'est la même grille à chaque essai.","Dein Freund hat es in {0} gelöst. Es ist bei jedem Versuch dasselbe Feld.","Seu amigo concluiu em {0}. É o mesmo tabuleiro em toda tentativa."],
+// ---- share ----
+["Send your result, or challenge a friend to the same board.","Envía tu resultado o reta a un amigo con el mismo tablero.","Envoie ton résultat, ou défie un ami sur la même grille.","Sende dein Ergebnis oder fordere einen Freund auf demselben Feld heraus.","Envie seu resultado ou desafie um amigo no mesmo tabuleiro."],
+["Dailies are unique to you, so this shares your result only.","Los diarios son únicos para ti, así que solo se comparte tu resultado.","Les grilles du jour te sont propres, donc seul ton résultat est partagé.","Tagesfelder sind nur deine, darum wird nur dein Ergebnis geteilt.","Os diários são só seus, então só o seu resultado é compartilhado."],
+["Your name on the challenge (optional)","Tu nombre en el reto (opcional)","Ton nom sur le défi (facultatif)","Dein Name in der Challenge (optional)","Seu nome no desafio (opcional)"],
+["Anonymous","Anónimo","Anonyme","Anonym","Anônimo"],
+["Send challenge","Enviar reto","Envoyer le défi","Challenge senden","Enviar desafio"],
+["Share result only","Compartir solo el resultado","Partager seulement le résultat","Nur Ergebnis teilen","Compartilhar só o resultado"],
+["The code holds the board itself, nothing about you except the name above. No account needed.","El código contiene el tablero en sí, nada sobre ti salvo el nombre de arriba. No hace falta cuenta.","Le code contient la grille elle-même, rien sur toi à part le nom ci-dessus. Pas besoin de compte.","Der Code enthält das Feld selbst und über dich nur den Namen oben. Kein Konto nötig.","O código contém o próprio tabuleiro, nada sobre você além do nome acima. Sem conta."],
+["Think you're faster? Paste this code into Sweep to play my exact board:","¿Crees que eres más rápido? Pega este código en Sweep para jugar exactamente mi tablero:","Tu crois être plus rapide ? Colle ce code dans Sweep pour jouer exactement ma grille :","Glaubst du, du bist schneller? Füge diesen Code in Sweep ein und spiel genau mein Feld:","Acha que é mais rápido? Cole este código no Sweep para jogar exatamente o meu tabuleiro:"],
+["Copied. Paste it to a friend.","Copiado. Pégaselo a un amigo.","Copié. Colle-le à un ami.","Kopiert. Schick es einem Freund.","Copiado. Cole para um amigo."],
+["Selected. Copy it from the box.","Seleccionado. Cópialo del cuadro.","Sélectionné. Copie-le depuis la zone.","Markiert. Kopiere es aus dem Feld.","Selecionado. Copie da caixa."],
+// ---- backup ----
+["Backup","Copia de seguridad","Sauvegarde","Sicherung","Backup"],
+["Your progress is stored on this device only. Keep this code somewhere safe, like a note or an email to yourself, to restore it later or move it to another device.","Tu progreso solo se guarda en este dispositivo. Guarda este código en un sitio seguro, como una nota o un correo a ti mismo, para restaurarlo o pasarlo a otro dispositivo.","Ta progression n'est stockée que sur cet appareil. Garde ce code en lieu sûr, dans une note ou un e-mail à toi-même, pour la restaurer ou la transférer.","Dein Fortschritt ist nur auf diesem Gerät gespeichert. Bewahre diesen Code sicher auf, etwa in einer Notiz oder einer Mail an dich selbst, um ihn später wiederherzustellen oder umzuziehen.","Seu progresso fica salvo só neste aparelho. Guarde este código num lugar seguro, como uma nota ou um e-mail para você mesmo, para restaurar depois ou levar a outro aparelho."],
+["Copy code","Copiar código","Copier le code","Code kopieren","Copiar código"],
+["Save to a file","Guardar en archivo","Enregistrer un fichier","Als Datei speichern","Salvar em arquivo"],
+["File size: {0} · saved to your device's downloads","Tamaño: {0} · se guarda en las descargas del dispositivo","Taille : {0} · enregistré dans les téléchargements","Dateigröße: {0} · wird in den Downloads gespeichert","Tamanho: {0} · salvo nos downloads do aparelho"],
+["Save file ({0})","Guardar archivo ({0})","Enregistrer ({0})","Datei speichern ({0})","Salvar arquivo ({0})"],
+["{0} bytes","{0} bytes","{0} octets","{0} Byte","{0} bytes"],
+["Saved {0}","Guardado {0}","{0} enregistré","{0} gespeichert","{0} salvo"],
+["Covers XP, unlocks, stars, stats, streaks and settings. An Endless run in progress isn't included.","Incluye XP, desbloqueos, estrellas, estadísticas, rachas y ajustes. No incluye una partida infinita en curso.","Inclut l'XP, les déblocages, les étoiles, les stats, les séries et les réglages. Pas la partie infinie en cours.","Umfasst XP, Freischaltungen, Sterne, Statistik, Serien und Einstellungen. Ein laufender Endlos-Lauf ist nicht dabei.","Inclui XP, desbloqueios, estrelas, estatísticas, sequências e configurações. Não inclui uma partida infinita em andamento."],
+["Restore","Restaurar","Restaurer","Wiederherstellen","Restaurar"],
+["Paste a backup code here","Pega aquí un código de copia","Colle un code de sauvegarde ici","Sicherungscode hier einfügen","Cole aqui um código de backup"],
+["Restore from code","Restaurar desde código","Restaurer depuis un code","Aus Code wiederherstellen","Restaurar do código"],
+["Restore from a file","Restaurar desde archivo","Restaurer depuis un fichier","Aus Datei wiederherstellen","Restaurar de arquivo"],
+["Backup code copied","Código de copia copiado","Code de sauvegarde copié","Sicherungscode kopiert","Código de backup copiado"],
+["Code selected. Copy it from the box.","Código seleccionado. Cópialo del cuadro.","Code sélectionné. Copie-le depuis la zone.","Code markiert. Kopiere ihn aus dem Feld.","Código selecionado. Copie da caixa."],
+["Paste a backup code first","Pega primero un código de copia","Colle d'abord un code de sauvegarde","Füge zuerst einen Sicherungscode ein","Cole um código de backup primeiro"],
+["That code doesn't look right. Check it was copied in full.","Ese código no parece correcto. Comprueba que se copió entero.","Ce code semble incorrect. Vérifie qu'il a été copié en entier.","Der Code sieht nicht richtig aus. Prüfe, ob er vollständig kopiert wurde.","Esse código não parece certo. Verifique se foi copiado inteiro."],
+["That file is too big to be a Sweep backup.","Ese archivo es demasiado grande para ser una copia de Sweep.","Ce fichier est trop gros pour être une sauvegarde Sweep.","Die Datei ist zu groß für eine Sweep-Sicherung.","Esse arquivo é grande demais para ser um backup do Sweep."],
+["Tap again to replace this device's progress with the level {0} backup","Vuelve a tocar para sustituir el progreso de este dispositivo por la copia de nivel {0}","Touche encore pour remplacer la progression de cet appareil par la sauvegarde niveau {0}","Tippe nochmal, um den Fortschritt dieses Geräts durch die Level-{0}-Sicherung zu ersetzen","Toque de novo para substituir o progresso deste aparelho pelo backup de nível {0}"],
+// ---- privacy ----
+["Short version: Sweep collects nothing.","En resumen: Sweep no recopila nada.","En bref : Sweep ne collecte rien.","Kurz gesagt: Sweep sammelt nichts.","Resumindo: o Sweep não coleta nada."],
+["No accounts, ads, analytics or trackers.","Sin cuentas, anuncios, analíticas ni rastreadores.","Pas de compte, de pub, de statistiques ni de traceurs.","Keine Konten, Werbung, Analysen oder Tracker.","Sem contas, anúncios, análises ou rastreadores."],
+["Nothing about you or how you play is sent anywhere.","Nada sobre ti ni sobre cómo juegas se envía a ningún sitio.","Rien sur toi ou ta façon de jouer n'est envoyé nulle part.","Nichts über dich oder dein Spiel wird irgendwohin gesendet.","Nada sobre você ou como você joga é enviado a lugar nenhum."],
+["Your progress stays on this device","Tu progreso se queda en este dispositivo","Ta progression reste sur cet appareil","Dein Fortschritt bleibt auf diesem Gerät","Seu progresso fica neste aparelho"],
+[", in your browser's storage. Clearing site data removes it, so keep a backup.",", en el almacenamiento del navegador. Borrar los datos del sitio lo elimina, así que haz copias.",", dans le stockage de ton navigateur. Effacer les données du site la supprime, alors fais des sauvegardes.",", im Speicher deines Browsers. Wenn du die Websitedaten löschst, ist er weg, also mach Sicherungen.",", no armazenamento do navegador. Limpar os dados do site apaga tudo, então faça backups."],
+["No network requests","Sin conexiones de red","Aucune requête réseau","Keine Netzwerkanfragen","Sem conexões de rede"],
+["beyond loading the game's own files. Fonts are bundled, and a security policy blocks connections to any other site.","aparte de cargar los archivos del propio juego. Las fuentes vienen incluidas y una política de seguridad bloquea conexiones a cualquier otro sitio.","en dehors du chargement des fichiers du jeu. Les polices sont incluses et une règle de sécurité bloque toute connexion vers d'autres sites.","außer zum Laden der eigenen Spieldateien. Schriften sind eingebaut, und eine Sicherheitsrichtlinie blockiert Verbindungen zu anderen Seiten.","além de carregar os arquivos do próprio jogo. As fontes vêm incluídas e uma política de segurança bloqueia conexões com qualquer outro site."],
+["Links you share","Los enlaces que compartes","Les liens que tu partages","Links, die du teilst","Os links que você compartilha"],
+["(challenges and league codes) contain only what's shown: the board, your times, the name you chose and a random player ID. They go only where you send them.","(retos y códigos de liga) solo contienen lo que se ve: el tablero, tus tiempos, el nombre que elegiste y un ID de jugador aleatorio. Solo van adonde tú los envíes.","(défis et codes de ligue) ne contiennent que ce qui est affiché : la grille, tes temps, le nom choisi et un identifiant aléatoire. Ils ne vont que là où tu les envoies.","(Challenges und Liga-Codes) enthalten nur, was angezeigt wird: das Feld, deine Zeiten, den gewählten Namen und eine zufällige Spieler-ID. Sie landen nur dort, wohin du sie schickst.","(desafios e códigos da liga) contêm só o que aparece: o tabuleiro, seus tempos, o nome que você escolheu e um ID de jogador aleatório. Eles só vão para onde você enviar."],
+["Backups","Las copias","Les sauvegardes","Sicherungen","Os backups"],
+["are a code or a text file that you keep. Sweep never uploads them.","son un código o un archivo de texto que guardas tú. Sweep nunca los sube.","sont un code ou un fichier texte que tu conserves. Sweep ne les envoie jamais.","sind ein Code oder eine Textdatei, die du aufbewahrst. Sweep lädt sie nie hoch.","são um código ou um arquivo de texto que você guarda. O Sweep nunca os envia."],
+["Open source","Código abierto","Open source","Open Source","Código aberto"],
+["under the MIT licence, so anyone can check all of this.","con licencia MIT, así que cualquiera puede comprobar todo esto.","sous licence MIT, donc tout le monde peut le vérifier.","unter der MIT-Lizenz, also kann jeder das alles prüfen.","sob a licença MIT, então qualquer pessoa pode verificar tudo isso."],
+// ---- what's new ----
+["Backup reminders: a gentle nudge if you haven't backed up in a month.","Recordatorios de copia: un aviso suave si llevas un mes sin hacer copia.","Rappels de sauvegarde : un petit rappel si tu n'as pas sauvegardé depuis un mois.","Sicherungs-Erinnerung: ein sanfter Hinweis, wenn du einen Monat lang nicht gesichert hast.","Lembretes de backup: um aviso gentil se você ficar um mês sem backup."],
+["Save your backup to a file, or restore from one. You see the file size before saving.","Guarda tu copia en un archivo o restaura desde uno. Verás el tamaño antes de guardarlo.","Enregistre ta sauvegarde dans un fichier, ou restaure-la depuis un fichier. Tu vois la taille avant d'enregistrer.","Speichere deine Sicherung als Datei oder stelle sie daraus wieder her. Die Dateigröße siehst du vorher.","Salve o backup em arquivo ou restaure a partir de um. Você vê o tamanho antes de salvar."],
+["A Privacy page in Settings: Sweep collects nothing.","Una página de Privacidad en Ajustes: Sweep no recopila nada.","Une page Confidentialité dans les Réglages : Sweep ne collecte rien.","Eine Datenschutz-Seite in den Einstellungen: Sweep sammelt nichts.","Uma página de Privacidade nas Configurações: o Sweep não coleta nada."],
+["This What's new page, with the version number.","Esta página de Novedades, con el número de versión.","Cette page Nouveautés, avec le numéro de version.","Diese Neuigkeiten-Seite mit der Versionsnummer.","Esta página de Novidades, com o número da versão."],
+["Translations: Español, Français, Deutsch and Português. Change the language in Settings.","Traducciones: español, francés, alemán y portugués. Cambia el idioma en Ajustes.","Traductions : espagnol, français, allemand et portugais. Change la langue dans les Réglages.","Übersetzungen: Spanisch, Französisch, Deutsch und Portugiesisch. Die Sprache änderst du in den Einstellungen.","Traduções: espanhol, francês, alemão e português. Mude o idioma nas Configurações."],
+["League stars rebalanced: ★ reach 75% (even if you hit a mine) · ★ clear it · ★ no hints and under 2:30.","Estrellas de liga reequilibradas: ★ llega al 75% (aunque pises una mina) · ★ complétalo · ★ sin pistas y en menos de 2:30.","Étoiles de ligue rééquilibrées : ★ atteins 75 % (même en touchant une mine) · ★ finis-la · ★ sans indice et en moins de 2:30.","Liga-Sterne neu gewichtet: ★ 75 % erreichen (auch mit Minentreffer) · ★ lösen · ★ ohne Tipp und unter 2:30.","Estrelas da liga rebalanceadas: ★ chegue a 75% (mesmo pisando numa mina) · ★ conclua · ★ sem dicas e em menos de 2:30."],
+["Ties go to more total progress, then the faster time.","Los empates se deciden por más progreso total y luego por menor tiempo.","En cas d'égalité, le plus de progression l'emporte, puis le temps le plus court.","Bei Gleichstand zählt mehr Gesamtfortschritt, dann die schnellere Zeit.","Empates vão para mais progresso total e depois menor tempo."],
+["League 0 restarted under the new rules.","La Liga 0 se reinició con las nuevas reglas.","La Ligue 0 a redémarré avec les nouvelles règles.","Liga 0 wurde mit den neuen Regeln neu gestartet.","A Liga 0 recomeçou com as novas regras."],
+["Leagues: a new season every month with a shared daily round.","Ligas: una temporada nueva cada mes con una ronda diaria compartida.","Ligues : une nouvelle saison chaque mois avec une manche quotidienne partagée.","Ligen: jeden Monat eine neue Saison mit einer gemeinsamen Tagesrunde.","Ligas: uma temporada nova todo mês com uma rodada diária compartilhada."],
+["Join with a locked name, share one link with your whole month, and climb the star table.","Únete con un nombre fijo, comparte un enlace con todo tu mes y sube en la clasificación de estrellas.","Rejoins avec un nom verrouillé, partage un lien avec tout ton mois et grimpe au classement des étoiles.","Tritt mit festem Namen bei, teile einen Link mit deinem ganzen Monat und klettere in der Sternetabelle.","Entre com um nome fixo, compartilhe um link com o seu mês inteiro e suba na tabela de estrelas."],
+["Season recap with podium XP, Season Champion, a crown and a trophy cabinet.","Resumen de temporada con XP de podio, Campeón de temporada, una corona y una vitrina de trofeos.","Bilan de saison avec XP de podium, Champion de saison, une couronne et une vitrine à trophées.","Saisonrückblick mit Treppchen-XP, Saisonmeister, Krone und Trophäenschrank.","Resumo da temporada com XP de pódio, Campeão da temporada, uma coroa e uma galeria de troféus."],
+["Medal flags, Copper, Silver, Gilded and Pearl boards, and new win effects for league placings.","Banderas de medalla, tableros Copper, Silver, Gilded y Pearl, y nuevos efectos de victoria por puestos en la liga.","Drapeaux médailles, grilles Copper, Silver, Gilded et Pearl, et nouveaux effets de victoire pour les places en ligue.","Medaillen-Flaggen, die Felder Copper, Silver, Gilded und Pearl und neue Siegeseffekte für Ligaplätze.","Bandeiras de medalha, tabuleiros Copper, Silver, Gilded e Pearl e novos efeitos de vitória pelas colocações na liga."],
+["Phone bars now match the game, and an optional full-screen mode.","Las barras del teléfono ya combinan con el juego, y hay un modo de pantalla completa opcional.","Les barres du téléphone s'accordent au jeu, et un mode plein écran est disponible.","Die Handy-Leisten passen jetzt zum Spiel, dazu gibt es einen optionalen Vollbildmodus.","As barras do celular agora combinam com o jogo, e há um modo de tela cheia opcional."],
+["Rule variants: Hex, Wraparound, Knight's move and Double mines.","Variantes de reglas: Hex, Envolvente, Caballo y Minas dobles.","Variantes de règles : Hex, Torique, Cavalier et Mines doubles.","Regelvarianten: Hex, verbundene Ränder, Springerzug und Doppelminen.","Variantes de regras: Hex, Contínuo, Cavalo e Minas duplas."],
+["Post-game analysis, challenge codes, pause, auto-flag, tap magnifier, colourblind numbers and left-handed controls.","Análisis tras la partida, códigos de reto, pausa, marcado automático, lupa, números para daltonismo y controles para zurdos.","Analyse d'après-partie, codes de défi, pause, marquage auto, loupe, chiffres pour daltoniens et commandes pour gauchers.","Spielanalyse, Challenge-Codes, Pause, Auto-Markieren, Lupe, farbenblind-freundliche Zahlen und Linkshänder-Steuerung.","Análise pós-jogo, códigos de desafio, pausa, marcação automática, lupa, números para daltonismo e controles para canhotos."],
+["Weekly challenges and stats over time.","Retos semanales y estadísticas a lo largo del tiempo.","Défis hebdomadaires et stats dans le temps.","Wochen-Challenges und Statistiken im Verlauf.","Desafios semanais e estatísticas ao longo do tempo."]
+);
+
+// Tutorial, rule variants, campaign screens and level tips.
+I18N_ROWS.push(
+// ---- tutorial ----
+["Step {0} of {1}","Paso {0} de {1}","Étape {0} sur {1}","Schritt {0} von {1}","Passo {0} de {1}"],
+["Every Sweep board can be cleared with logic, never luck. Tap the glowing tile to start. Your first tap is always safe.","Todos los tableros de Sweep se resuelven con lógica, nunca con suerte. Toca la casilla brillante para empezar. Tu primer toque siempre es seguro.","Chaque grille de Sweep se résout par la logique, jamais par la chance. Touche la case lumineuse pour commencer. Ton premier coup est toujours sûr.","Jedes Sweep-Feld lässt sich mit Logik lösen, nie mit Glück. Tippe auf das leuchtende Feld, um zu starten. Dein erster Tipp ist immer sicher.","Todo tabuleiro do Sweep se resolve com lógica, nunca com sorte. Toque na casa brilhante para começar. Seu primeiro toque é sempre seguro."],
+["Tap the glowing tile.","Toca la casilla brillante.","Touche la case lumineuse.","Tippe auf das leuchtende Feld.","Toque na casa brilhante."],
+["Each number counts the mines touching it, diagonals included. This 1 touches just one hidden tile, so that tile is a mine. Press and hold it to flag it.","Cada número cuenta las minas que lo tocan, incluidas las diagonales. Este 1 solo toca una casilla oculta, así que es una mina. Mantenla pulsada para ponerle bandera.","Chaque nombre compte les mines qui le touchent, diagonales comprises. Ce 1 ne touche qu'une case cachée, c'est donc une mine. Appuie longuement dessus pour poser un drapeau.","Jede Zahl zählt die Minen, die sie berühren, auch diagonal. Diese 1 berührt nur ein verdecktes Feld, also ist es eine Mine. Halte es gedrückt, um es zu markieren.","Cada número conta as minas que encostam nele, incluindo as diagonais. Este 1 encosta em só uma casa escondida, então ela é uma mina. Toque e segure para marcar com bandeira."],
+["Press and hold the hidden tile next to the highlighted 1.","Mantén pulsada la casilla oculta junto al 1 resaltado.","Appuie longuement sur la case cachée à côté du 1 en surbrillance.","Halte das verdeckte Feld neben der markierten 1 gedrückt.","Toque e segure a casa escondida ao lado do 1 destacado."],
+["This 1 already has its mine flagged, so everything else around it is safe. Tap the number to clear its neighbours in one go.","Este 1 ya tiene su mina marcada, así que todo lo demás a su alrededor es seguro. Toca el número para despejar sus vecinas de una vez.","Ce 1 a déjà sa mine marquée, donc tout le reste autour est sûr. Touche le nombre pour dégager ses voisines d'un coup.","Bei dieser 1 ist die Mine schon markiert, also ist alles andere drumherum sicher. Tippe auf die Zahl, um die Nachbarn auf einmal aufzudecken.","Este 1 já tem sua mina marcada, então todo o resto em volta é seguro. Toque no número para limpar os vizinhos de uma vez."],
+["Tap the highlighted 1.","Toca el 1 resaltado.","Touche le 1 en surbrillance.","Tippe auf die markierte 1.","Toque no 1 destacado."],
+["Sometimes you need two numbers together. These 1s share two hidden tiles, and the first 1's mine has to be in one of them. That leaves no mine for the second 1's third tile. Reveal it.","A veces hacen falta dos números juntos. Estos 1 comparten dos casillas ocultas, y la mina del primer 1 tiene que estar en una de ellas. Así no queda mina para la tercera casilla del segundo 1. Descúbrela.","Parfois, il faut deux nombres ensemble. Ces 1 partagent deux cases cachées, et la mine du premier 1 est forcément dans l'une d'elles. Il ne reste donc aucune mine pour la troisième case du second 1. Révèle-la.","Manchmal brauchst du zwei Zahlen zusammen. Diese 1en teilen sich zwei verdeckte Felder, und die Mine der ersten 1 muss in einem davon liegen. Für das dritte Feld der zweiten 1 bleibt also keine Mine. Deck es auf.","Às vezes você precisa de dois números juntos. Estes 1 dividem duas casas escondidas, e a mina do primeiro 1 tem que estar numa delas. Isso não deixa mina para a terceira casa do segundo 1. Revele-a."],
+["Find the hidden tile that only the second highlighted 1 touches.","Busca la casilla oculta que solo toca el segundo 1 resaltado.","Trouve la case cachée que seul le second 1 en surbrillance touche.","Finde das verdeckte Feld, das nur die zweite markierte 1 berührt.","Encontre a casa escondida que só o segundo 1 destacado toca."],
+["Stuck? The bulb finds a tile you can prove is safe and highlights the numbers that prove it. You get a few each day. Try it now, it's free here.","¿Atascado? La bombilla encuentra una casilla que puedes demostrar segura y resalta los números que lo prueban. Tienes unas cuantas al día. Pruébala ahora, aquí es gratis.","Bloqué ? L'ampoule trouve une case dont tu peux prouver qu'elle est sûre et met en valeur les nombres qui le prouvent. Tu en as quelques-unes par jour. Essaie maintenant, c'est gratuit ici.","Feststeckt? Die Glühbirne findet ein Feld, das du als sicher beweisen kannst, und markiert die Zahlen, die es beweisen. Du bekommst jeden Tag ein paar. Probier's jetzt, hier ist es gratis.","Travou? A lâmpada encontra uma casa que você pode provar que é segura e destaca os números que provam isso. Você ganha algumas por dia. Teste agora, aqui é grátis."],
+["Tap the bulb in the bottom left.","Toca la bombilla de abajo a la izquierda.","Touche l'ampoule en bas à gauche.","Tippe unten links auf die Glühbirne.","Toque na lâmpada no canto inferior esquerdo."],
+["Reveal the glowing tile, then clear the rest of the board. Mistakes won't count while you're learning.","Descubre la casilla brillante y luego despeja el resto del tablero. Mientras aprendes, los errores no cuentan.","Révèle la case lumineuse, puis dégage le reste de la grille. Les erreurs ne comptent pas pendant l'apprentissage.","Deck das leuchtende Feld auf und räume dann den Rest. Fehler zählen nicht, solange du lernst.","Revele a casa brilhante e depois limpe o resto do tabuleiro. Erros não contam enquanto você aprende."],
+["That one's a mine. Check the numbers around it.","Esa es una mina. Mira los números de alrededor.","Celle-là est une mine. Regarde les nombres autour.","Das ist eine Mine. Schau dir die Zahlen drumherum an.","Essa é uma mina. Confira os números em volta."],
+["Follow the step above first.","Primero sigue el paso de arriba.","Suis d'abord l'étape ci-dessus.","Folge zuerst dem Schritt oben.","Siga primeiro o passo acima."],
+["Careful, that's the mine! Press and hold it to flag it instead.","¡Cuidado, esa es la mina! Mantenla pulsada para ponerle bandera.","Attention, c'est la mine ! Appuie longuement pour poser un drapeau.","Vorsicht, das ist die Mine! Halte sie gedrückt, um sie zu markieren.","Cuidado, essa é a mina! Toque e segure para marcar com bandeira."],
+["You're ready","Ya estás listo","Tu es prêt","Du bist bereit","Você está pronto"],
+["That's everything you need. Every board from here on can be cleared the same way.","Eso es todo lo que necesitas. A partir de aquí, todos los tableros se resuelven igual.","C'est tout ce qu'il te faut. Toutes les grilles à partir d'ici se résolvent de la même façon.","Das ist alles, was du brauchst. Jedes weitere Feld lässt sich genauso lösen.","Isso é tudo de que você precisa. Daqui em diante, todo tabuleiro se resolve do mesmo jeito."],
+["They refill each day. You earn more from level-ups, win streaks and Endless runs.","Se recargan cada día. Ganas más al subir de nivel, con rachas y en partidas infinitas.","Ils se rechargent chaque jour. Tu en gagnes en montant de niveau, avec des séries et en mode Infini.","Sie füllen sich täglich auf. Mehr gibt es durch Level-ups, Siegesserien und Endlos-Läufe.","Elas recarregam todo dia. Você ganha mais subindo de nível, com sequências e no Infinito."],
+["Play Beginner","Jugar Principiante","Jouer en Débutant","Anfänger spielen","Jogar Iniciante"],
+["Tutorial ›","Tutorial ›","Tutoriel ›","Tutorial ›","Tutorial ›"],
+// ---- rule variants ----
+["Numbers count the 8 tiles around them.","Los números cuentan las 8 casillas que los rodean.","Les nombres comptent les 8 cases autour d'eux.","Zahlen zählen die 8 Felder um sie herum.","Os números contam as 8 casas em volta."],
+["Six-sided tiles. Numbers count the 6 tiles touching them.","Casillas hexagonales. Los números cuentan las 6 casillas que los tocan.","Cases hexagonales. Les nombres comptent les 6 cases qui les touchent.","Sechseckige Felder. Zahlen zählen die 6 angrenzenden Felder.","Casas hexagonais. Os números contam as 6 casas que encostam neles."],
+["Wraparound","Envolvente","Torique","Verbundene Ränder","Contínuo"],
+["The edges join up: the left edge touches the right, the top touches the bottom. Faded tiles show the other side.","Los bordes se unen: el izquierdo toca el derecho y el de arriba toca el de abajo. Las casillas atenuadas muestran el otro lado.","Les bords se rejoignent : la gauche touche la droite, le haut touche le bas. Les cases estompées montrent l'autre côté.","Die Ränder sind verbunden: links grenzt an rechts, oben an unten. Blasse Felder zeigen die andere Seite.","As bordas se unem: a esquerda encosta na direita e a de cima na de baixo. As casas apagadas mostram o outro lado."],
+["Knight's move","Caballo","Cavalier","Springerzug","Cavalo"],
+["Numbers count the 8 tiles a chess knight could jump to. Tap a number to see which.","Los números cuentan las 8 casillas a las que podría saltar un caballo de ajedrez. Toca un número para verlas.","Les nombres comptent les 8 cases qu'un cavalier d'échecs peut atteindre. Touche un nombre pour les voir.","Zahlen zählen die 8 Felder, die ein Springer im Schach erreichen kann. Tippe auf eine Zahl, um sie zu sehen.","Os números contam as 8 casas para onde um cavalo de xadrez poderia pular. Toque num número para ver quais."],
+["Double mines","Minas dobles","Mines doubles","Doppelminen","Minas duplas"],
+["A tile can hold 2 mines, and numbers count mines, not tiles. Tap a flag again to mark 2.","Una casilla puede tener 2 minas, y los números cuentan minas, no casillas. Vuelve a tocar una bandera para marcar 2.","Une case peut contenir 2 mines, et les nombres comptent les mines, pas les cases. Touche à nouveau un drapeau pour en marquer 2.","Ein Feld kann 2 Minen enthalten, und Zahlen zählen Minen, nicht Felder. Tippe nochmal auf eine Flagge, um 2 zu markieren.","Uma casa pode ter 2 minas, e os números contam minas, não casas. Toque de novo numa bandeira para marcar 2."],
+// ---- campaign screens ----
+["{0} · {1}/45 stars · {2} XP per new star","{0} · {1}/45 estrellas · {2} XP por estrella nueva","{0} · {1}/45 étoiles · {2} XP par nouvelle étoile","{0} · {1}/45 Sterne · {2} XP pro neuem Stern","{0} · {1}/45 estrelas · {2} XP por estrela nova"],
+["{0}×{1} · {2} mines","{0}×{1} · {2} minas","{0}×{1} · {2} mines","{0}×{1} · {2} Minen","{0}×{1} · {2} minas"],
+["{0} · twist","{0} · reto extra","{0} · contrainte","{0} · Twist","{0} · desafio extra"],
+["Final board","Tablero final","Grille finale","Letztes Feld","Tabuleiro final"],
+["Graduation","Graduación","Remise des diplômes","Abschluss","Formatura"],
+["{0} · Level {1}","{0} · Nivel {1}","{0} · Niveau {1}","{0} · Level {1}","{0} · Nível {1}"],
+["{0} mines · {1} XP per new star","{0} minas · {1} XP por estrella nueva","{0} mines · {1} XP par nouvelle étoile","{0} Minen · {1} XP pro neuem Stern","{0} minas · {1} XP por estrela nova"],
+["Puzzle · {0}","Puzle · {0}","Puzzle · {0}","Rätsel · {0}","Quebra-cabeça · {0}"],
+["Clear the board","Completa el tablero","Finis la grille","Löse das Feld","Conclua o tabuleiro"],
+["Use no hints","No uses pistas","N'utilise aucun indice","Nutze keine Tipps","Não use dicas"],
+["Finish in {0} or less","Termina en {0} o menos","Termine en {0} ou moins","Schaffe es in höchstens {0}","Termine em {0} ou menos"],
+["Don't place any flags","No pongas banderas","Ne pose aucun drapeau","Setze keine Flaggen","Não coloque bandeiras"],
+["Don't tap numbers to clear around them","No toques números para despejar a su alrededor","Ne touche pas les nombres pour dégager autour","Tippe nicht auf Zahlen, um drumherum aufzudecken","Não toque em números para limpar em volta"],
+["Clear the previous level first","Completa antes el nivel anterior","Termine d'abord le niveau précédent","Schließe zuerst das vorherige Level ab","Conclua antes o nível anterior"],
+["Finish the {0} campaign to unlock this one","Termina la campaña {0} para desbloquear esta","Termine la campagne {0} pour débloquer celle-ci","Schließe die Kampagne {0} ab, um diese freizuschalten","Termine a campanha {0} para desbloquear esta"],
+["Level cleared","Nivel completado","Niveau réussi","Level geschafft","Nível concluído"],
+["Graduated!","¡Graduado!","Diplômé !","Bestanden!","Formado!"],
+["Campaign complete!","¡Campaña completada!","Campagne terminée !","Kampagne abgeschlossen!","Campanha concluída!"],
+["· earned before","· conseguida antes","· déjà obtenue","· schon verdient","· conquistada antes"],
+["No new stars this time.","Esta vez no hay estrellas nuevas.","Pas de nouvelle étoile cette fois.","Diesmal keine neuen Sterne.","Nenhuma estrela nova desta vez."],
+["{0} campaign unlocked","Campaña {0} desbloqueada","Campagne {0} débloquée","Kampagne {0} freigeschaltet","Campanha {0} desbloqueada"],
+["{0} campaign stars","{0} estrellas de campaña","{0} étoiles de campagne","{0} Kampagnensterne","{0} estrelas de campanha"],
+["Start the {0} campaign","Empezar la campaña {0}","Commencer la campagne {0}","Kampagne {0} starten","Começar a campanha {0}"],
+["Next level","Siguiente nivel","Niveau suivant","Nächstes Level","Próximo nível"],
+["Retry for more stars","Reintentar para más estrellas","Rejouer pour plus d'étoiles","Nochmal für mehr Sterne","Tentar de novo por mais estrelas"],
+["Campaign map","Mapa de campaña","Carte de campagne","Kampagnenkarte","Mapa da campanha"],
+["Go back for any stars you missed.","Vuelve a por las estrellas que te faltan.","Reviens chercher les étoiles manquées.","Hol dir später die fehlenden Sterne.","Volte para pegar as estrelas que faltaram."],
+["Every try gets a fresh board.","Cada intento tiene un tablero nuevo.","Chaque essai a une nouvelle grille.","Jeder Versuch hat ein neues Feld.","Cada tentativa tem um tabuleiro novo."],
+// ---- level tips ----
+["Each number counts the mines touching that tile, diagonals included.","Cada número cuenta las minas que tocan esa casilla, incluidas las diagonales.","Chaque nombre compte les mines qui touchent cette case, diagonales comprises.","Jede Zahl zählt die Minen, die dieses Feld berühren, auch diagonal.","Cada número conta as minas que encostam naquela casa, incluindo as diagonais."],
+["If a number has exactly that many hidden neighbours, they're all mines. Flag them.","Si un número tiene exactamente esa cantidad de vecinas ocultas, todas son minas. Márcalas.","Si un nombre a exactement autant de voisines cachées, ce sont toutes des mines. Marque-les.","Hat eine Zahl genau so viele verdeckte Nachbarn, sind alle Minen. Markiere sie.","Se um número tem exatamente essa quantidade de vizinhas escondidas, todas são minas. Marque-as."],
+["When a number's mines are all flagged, tap it to clear the rest at once.","Cuando todas las minas de un número tienen bandera, tócalo para despejar el resto de golpe.","Quand toutes les mines d'un nombre sont marquées, touche-le pour dégager le reste d'un coup.","Sind alle Minen einer Zahl markiert, tippe darauf, um den Rest auf einmal aufzudecken.","Quando todas as minas de um número têm bandeira, toque nele para limpar o resto de uma vez."],
+["Shaped boards follow the same rules. Edge tiles just have fewer neighbours.","Los tableros con forma siguen las mismas reglas. Las casillas del borde solo tienen menos vecinas.","Les grilles en forme suivent les mêmes règles. Les cases du bord ont juste moins de voisines.","Geformte Felder folgen denselben Regeln. Randfelder haben nur weniger Nachbarn.","Tabuleiros com formato seguem as mesmas regras. As casas da borda só têm menos vizinhas."],
+["New: some tiles need two numbers together. Look for a 1 next to a 1 along an edge.","Nuevo: algunas casillas necesitan dos números juntos. Busca un 1 junto a otro 1 en un borde.","Nouveau : certaines cases demandent deux nombres ensemble. Cherche un 1 à côté d'un 1 le long d'un bord.","Neu: Manche Felder brauchen zwei Zahlen zusammen. Achte auf eine 1 neben einer 1 an einer Kante.","Novidade: algumas casas precisam de dois números juntos. Procure um 1 ao lado de outro 1 numa borda."],
+["Compare neighbouring numbers that share hidden tiles. The difference tells you something.","Compara números vecinos que comparten casillas ocultas. La diferencia te dice algo.","Compare les nombres voisins qui partagent des cases cachées. La différence t'apprend quelque chose.","Vergleiche benachbarte Zahlen mit gemeinsamen verdeckten Feldern. Der Unterschied verrät dir etwas.","Compare números vizinhos que dividem casas escondidas. A diferença diz alguma coisa."],
+["Bonus star: win without placing a single flag.","Estrella extra: gana sin poner ni una bandera.","Étoile bonus : gagne sans poser un seul drapeau.","Bonusstern: Gewinne ohne eine einzige Flagge.","Estrela bônus: vença sem colocar nenhuma bandeira."],
+["Bonus star: win without placing a flag.","Estrella extra: gana sin poner banderas.","Étoile bonus : gagne sans poser de drapeau.","Bonusstern: Gewinne ohne Flagge.","Estrela bônus: vença sem colocar bandeiras."],
+["Bonus star: win without tapping a number to clear around it.","Estrella extra: gana sin tocar un número para despejar a su alrededor.","Étoile bonus : gagne sans toucher un nombre pour dégager autour.","Bonusstern: Gewinne, ohne auf eine Zahl zu tippen, um drumherum aufzudecken.","Estrela bônus: vença sem tocar num número para limpar em volta."],
+["Bonus star: win without tapping numbers to clear around them.","Estrella extra: gana sin tocar números para despejar a su alrededor.","Étoile bonus : gagne sans toucher les nombres pour dégager autour.","Bonusstern: Gewinne, ohne auf Zahlen zu tippen, um drumherum aufzudecken.","Estrela bônus: vença sem tocar em números para limpar em volta."],
+["A shaped board with a pair or two to find.","Un tablero con forma y un par o dos de parejas por encontrar.","Une grille en forme avec une paire ou deux à trouver.","Ein geformtes Feld mit ein, zwei Paaren zum Finden.","Um tabuleiro com formato e um ou dois pares para achar."],
+["More mines, more pairs. There's no clock on the first two stars.","Más minas, más parejas. Las dos primeras estrellas no tienen reloj.","Plus de mines, plus de paires. Pas de chrono pour les deux premières étoiles.","Mehr Minen, mehr Paare. Für die ersten zwei Sterne läuft keine Uhr.","Mais minas, mais pares. As duas primeiras estrelas não têm relógio."],
+["Puzzle: this board is part-solved. The next move needs two numbers together.","Puzle: este tablero está medio resuelto. La siguiente jugada necesita dos números juntos.","Puzzle : cette grille est en partie résolue. Le prochain coup demande deux nombres ensemble.","Rätsel: Dieses Feld ist teilweise gelöst. Der nächste Zug braucht zwei Zahlen zusammen.","Quebra-cabeça: este tabuleiro está meio resolvido. A próxima jogada precisa de dois números juntos."],
+["A bigger board with the same logic.","Un tablero más grande con la misma lógica.","Une grille plus grande, même logique.","Ein größeres Feld mit derselben Logik.","Um tabuleiro maior com a mesma lógica."],
+["Work your way around the ring.","Avanza alrededor del anillo.","Fais le tour de l'anneau.","Arbeite dich um den Ring herum.","Avance ao redor do anel."],
+["Nearly Intermediate density.","Casi la densidad de Intermedio.","Presque la densité Intermédiaire.","Fast schon Fortgeschrittenen-Dichte.","Quase a densidade do Intermediário."],
+["A full Intermediate board. Clear it to graduate.","Un tablero Intermedio completo. Complétalo para graduarte.","Une grille Intermédiaire complète. Réussis-la pour obtenir ton diplôme.","Ein vollständiges Fortgeschrittenen-Feld. Löse es für deinen Abschluss.","Um tabuleiro Intermediário completo. Conclua para se formar."],
+["Welcome to Intermediate. Same logic, more of it.","Bienvenido a Intermedio. La misma lógica, pero más.","Bienvenue en Intermédiaire. Même logique, en plus grand.","Willkommen bei Fortgeschritten. Dieselbe Logik, nur mehr davon.","Bem-vindo ao Intermediário. A mesma lógica, só que mais."],
+["Look for pairs along the edges of open areas.","Busca parejas en los bordes de las zonas abiertas.","Cherche des paires le long des bords des zones ouvertes.","Suche Paare an den Rändern offener Bereiche.","Procure pares nas bordas das áreas abertas."],
+["Plenty of spots where two numbers share tiles.","Muchos sitios donde dos números comparten casillas.","Beaucoup d'endroits où deux nombres partagent des cases.","Viele Stellen, an denen zwei Zahlen Felder teilen.","Vários pontos onde dois números dividem casas."],
+["Clear the centre, then work out along each arm.","Despeja el centro y luego avanza por cada brazo.","Dégage le centre, puis avance le long de chaque branche.","Räume die Mitte und arbeite dich dann jeden Arm entlang.","Limpe o centro e depois avance por cada braço."],
+["Slightly denser than a regular Intermediate board.","Algo más denso que un Intermedio normal.","Un peu plus dense qu'une grille Intermédiaire normale.","Etwas dichter als ein normales Fortgeschrittenen-Feld.","Um pouco mais denso que um Intermediário comum."],
+["A taller board with more pairs to find.","Un tablero más alto con más parejas por encontrar.","Une grille plus haute avec plus de paires à trouver.","Ein höheres Feld mit mehr Paaren zum Finden.","Um tabuleiro mais alto com mais pares para achar."],
+["The narrow waist joins the two halves.","La cintura estrecha une las dos mitades.","La taille étroite relie les deux moitiés.","Die schmale Taille verbindet beide Hälften.","A cintura estreita liga as duas metades."],
+["Keep a steady rhythm.","Mantén un ritmo constante.","Garde un rythme régulier.","Bleib im Rhythmus.","Mantenha um ritmo constante."],
+["Puzzle: part-solved. Find the move that needs two numbers.","Puzle: medio resuelto. Encuentra la jugada que necesita dos números.","Puzzle : en partie résolu. Trouve le coup qui demande deux nombres.","Rätsel: teilweise gelöst. Finde den Zug, der zwei Zahlen braucht.","Quebra-cabeça: meio resolvido. Ache a jogada que precisa de dois números."],
+["Near Expert density now.","Ya casi densidad de Experto.","Presque la densité Expert maintenant.","Jetzt fast Experten-Dichte.","Agora quase densidade de Especialista."],
+["Holes make new edges, and edges make new patterns.","Los huecos crean bordes nuevos, y los bordes, patrones nuevos.","Les trous créent de nouveaux bords, et les bords de nouveaux motifs.","Löcher schaffen neue Ränder, und Ränder neue Muster.","Buracos criam novas bordas, e bordas criam novos padrões."],
+["Busier still.","Aún más lleno.","Encore plus chargé.","Noch voller.","Ainda mais cheio."],
+["A full Expert board. Clear it to graduate.","Un tablero Experto completo. Complétalo para graduarte.","Une grille Expert complète. Réussis-la pour obtenir ton diplôme.","Ein vollständiges Experten-Feld. Löse es für deinen Abschluss.","Um tabuleiro Especialista completo. Conclua para se formar."],
+["Expert density on a smaller board.","Densidad de Experto en un tablero más pequeño.","Densité Expert sur une grille plus petite.","Experten-Dichte auf kleinerem Feld.","Densidade de Especialista num tabuleiro menor."],
+["Growing toward full size.","Creciendo hacia el tamaño completo.","On approche de la taille complète.","Es wächst auf volle Größe.","Crescendo até o tamanho completo."],
+["A regular Expert board, with plenty of pairs.","Un tablero Experto normal, con muchas parejas.","Une grille Expert normale, avec plein de paires.","Ein normales Experten-Feld mit vielen Paaren.","Um tabuleiro Especialista comum, com muitos pares."],
+["Cross the bridge to reach the second island.","Cruza el puente para llegar a la segunda isla.","Traverse le pont pour atteindre la seconde île.","Überquere die Brücke zur zweiten Insel.","Atravesse a ponte para chegar à segunda ilha."],
+["A few more mines than standard Expert.","Unas pocas minas más que un Experto estándar.","Quelques mines de plus qu'un Expert standard.","Ein paar Minen mehr als normales Experte.","Algumas minas a mais que o Especialista padrão."],
+["Denser than standard Expert.","Más denso que un Experto estándar.","Plus dense qu'un Expert standard.","Dichter als normales Experte.","Mais denso que o Especialista padrão."],
+["A wide ring with dense edges.","Un anillo ancho con bordes densos.","Un large anneau aux bords denses.","Ein breiter Ring mit dichten Rändern.","Um anel largo com bordas densas."],
+["A bigger board with denser mines.","Un tablero más grande con más minas.","Une grille plus grande, plus minée.","Ein größeres Feld mit dichteren Minen.","Um tabuleiro maior com minas mais densas."],
+["Puzzle: a dense board, part-solved. The next move needs two numbers.","Puzle: un tablero denso, medio resuelto. La siguiente jugada necesita dos números.","Puzzle : une grille dense, en partie résolue. Le prochain coup demande deux nombres.","Rätsel: ein dichtes Feld, teilweise gelöst. Der nächste Zug braucht zwei Zahlen.","Quebra-cabeça: um tabuleiro denso, meio resolvido. A próxima jogada precisa de dois números."],
+["Now past standard Expert.","Ya por encima del Experto estándar.","Au-delà de l'Expert standard.","Jetzt über normalem Experte.","Agora além do Especialista padrão."],
+["A big diamond.","Un gran diamante.","Un grand losange.","Eine große Raute.","Um grande losango."],
+["Very dense. Take your time.","Muy denso. Tómate tu tiempo.","Très dense. Prends ton temps.","Sehr dicht. Lass dir Zeit.","Muito denso. Vá com calma."],
+["The final board, beyond Expert.","El tablero final, más allá de Experto.","La grille finale, au-delà d'Expert.","Das letzte Feld, jenseits von Experte.","O tabuleiro final, além do Especialista."]
+);
+
+// Cosmetics: descriptions, reward labels and generic joins. Cosmetic names (Sakura, Midnight…) stay as they are.
+I18N_ROWS.push(
+// reward labels: "Mint board", "Pin flag, Pop reveal", "Pearl board + Pearl flag + …"
+["{0} board","Tablero {0}","Grille {0}","Feld {0}","Tabuleiro {0}"],
+["{0} flag","Bandera {0}","Drapeau {0}","Flagge {0}","Bandeira {0}"],
+["{0} reveal","Revelado {0}","Révélation {0}","Aufdecken: {0}","Revelação {0}"],
+["{0} sounds","Sonidos {0}","Sons {0}","Sounds: {0}","Sons {0}"],
+["{0} effect","Efecto {0}","Effet {0}","Effekt {0}","Efeito {0}"],
+["{0} soundtrack","Banda sonora {0}","Bande-son {0}","Soundtrack {0}","Trilha sonora {0}"],
+["{0} win effect","Efecto de victoria {0}","Effet de victoire {0}","Siegeseffekt {0}","Efeito de vitória {0}"],
+["{0} + {1}","{0} + {1}","{0} + {1}","{0} + {1}","{0} + {1}"],
+["{0}, {1}","{0}, {1}","{0}, {1}","{0}, {1}","{0}, {1}"],
+["4 boards, Pennant flag, Fade reveal, Soft sounds, Daylight soundtrack","4 tableros, bandera Pennant, revelado Fade, sonidos Soft, banda sonora Daylight","4 grilles, drapeau Pennant, révélation Fade, sons Soft, bande-son Daylight","4 Felder, Flagge Pennant, Aufdecken Fade, Sounds Soft, Soundtrack Daylight","4 tabuleiros, bandeira Pennant, revelação Fade, sons Soft, trilha Daylight"],
+["None","Ninguno","Aucun","Keiner","Nenhum"],
+// boards
+["Flat and quiet. Nothing extra.","Plano y tranquilo. Nada de más.","Plat et sobre. Rien de plus.","Flach und ruhig. Nichts extra.","Plano e discreto. Nada a mais."],
+["Crisp lines and classic numbers.","Líneas nítidas y números clásicos.","Lignes nettes et chiffres classiques.","Klare Linien und klassische Zahlen.","Linhas nítidas e números clássicos."],
+["Colour that drifts across the board.","Color que fluye por el tablero.","Une couleur qui glisse sur la grille.","Farbe, die übers Feld wandert.","Cor que flui pelo tabuleiro."],
+["Soft raised tiles with room to breathe.","Casillas en relieve suave, con espacio para respirar.","Cases en léger relief, avec de l'air.","Weich erhabene Felder mit Luft zum Atmen.","Casas em relevo suave, com espaço para respirar."],
+["Cool green, soft and rounded.","Verde fresco, suave y redondeado.","Vert frais, doux et arrondi.","Kühles Grün, weich und rund.","Verde fresco, suave e arredondado."],
+["Ink on warm notebook paper.","Tinta sobre papel de cuaderno cálido.","De l'encre sur un papier de carnet chaleureux.","Tinte auf warmem Notizpapier.","Tinta sobre papel de caderno."],
+["A full spectrum on black glass.","Todo el espectro sobre cristal negro.","Tout le spectre sur du verre noir.","Das ganze Spektrum auf schwarzem Glas.","O espectro completo sobre vidro preto."],
+["Max level. You earned this.","Nivel máximo. Te lo has ganado.","Niveau max. Tu l'as mérité.","Höchstes Level. Das hast du dir verdient.","Nível máximo. Você mereceu."],
+["Neon numbers on deep navy.","Números de neón sobre azul marino.","Chiffres néon sur bleu nuit.","Neonzahlen auf tiefem Marineblau.","Números neon sobre azul-marinho."],
+["A warm dusk gradient.","Un degradado cálido de atardecer.","Un dégradé chaud de crépuscule.","Ein warmer Abendverlauf.","Um degradê quente de entardecer."],
+["Phosphor green and monospace.","Verde fósforo y monoespaciado.","Vert phosphore et chasse fixe.","Phosphorgrün und Monospace.","Verde fósforo e monoespaçado."],
+["Round petals in blossom pink.","Pétalos redondos en rosa flor.","Pétales ronds rose fleur.","Runde Blütenblätter in Rosa.","Pétalas redondas em rosa-flor."],
+["Drafting paper and white ink.","Papel de plano y tinta blanca.","Papier calque et encre blanche.","Zeichenpapier und weiße Tinte.","Papel de projeto e tinta branca."],
+["Gets deeper the further you roam.","Se vuelve más profundo cuanto más te alejas.","S'assombrit à mesure que tu t'éloignes.","Wird tiefer, je weiter du ziehst.","Fica mais profundo quanto mais longe você vai."],
+["Northern lights over the map.","Auroras boreales sobre el mapa.","Des aurores boréales sur la carte.","Nordlichter über der Karte.","Auroras boreais sobre o mapa."],
+["Pencil on a fresh page.","Lápiz sobre una página en blanco.","Crayon sur une page vierge.","Bleistift auf frischem Papier.","Lápis numa página nova."],
+["Neon sunset on a retro grid.","Atardecer de neón sobre una cuadrícula retro.","Coucher de soleil néon sur une grille rétro.","Neon-Sonnenuntergang auf Retro-Raster.","Pôr do sol neon numa grade retrô."],
+["Frosted panes over the night.","Cristales escarchados sobre la noche.","Des vitres givrées sur la nuit.","Frostige Scheiben über der Nacht.","Vidros foscos sobre a noite."],
+["Polished volcanic glass. Max level.","Vidrio volcánico pulido. Nivel máximo.","Verre volcanique poli. Niveau max.","Poliertes Vulkanglas. Höchstes Level.","Vidro vulcânico polido. Nível máximo."],
+["Clear the night sky to reveal its stars.","Despeja el cielo nocturno para revelar sus estrellas.","Dégage le ciel nocturne pour révéler ses étoiles.","Räume den Nachthimmel und entdecke seine Sterne.","Limpe o céu noturno para revelar as estrelas."],
+["Back to school, in chalk.","De vuelta al cole, en tiza.","Retour à l'école, à la craie.","Zurück in die Schule, mit Kreide.","De volta à escola, em giz."],
+["Velvet and gold for the top of the class.","Terciopelo y oro para el primero de la clase.","Velours et or pour le major de promo.","Samt und Gold für Klassenbeste.","Veludo e ouro para o melhor da turma."],
+["Every colour, every shape.","Todos los colores, todas las formas.","Toutes les couleurs, toutes les formes.","Jede Farbe, jede Form.","Todas as cores, todas as formas."],
+["First light, every single day.","La primera luz, cada día.","La première lueur, chaque jour.","Erstes Licht, jeden einzelnen Tag.","A primeira luz, todo santo dia."],
+["Glowing numbers in the deep.","Números brillantes en las profundidades.","Des chiffres lumineux dans les profondeurs.","Leuchtende Zahlen in der Tiefe.","Números brilhantes nas profundezas."],
+["Warm, burnished metal for a podium week.","Metal bruñido y cálido para una semana de podio.","Du métal chaud et poli pour une semaine sur le podium.","Warmes, poliertes Metall für eine Treppchen-Woche.","Metal quente e polido para uma semana no pódio."],
+["Brushed steel for a week at the top two.","Acero cepillado para una semana entre los dos primeros.","De l'acier brossé pour une semaine dans le top 2.","Gebürsteter Stahl für eine Woche unter den ersten zwei.","Aço escovado para uma semana entre os dois primeiros."],
+["Gold leaf on ivory for a reigning champion.","Pan de oro sobre marfil para un campeón reinante.","De la feuille d'or sur ivoire pour un champion en titre.","Blattgold auf Elfenbein für amtierende Champions.","Folha de ouro sobre marfim para um campeão reinante."],
+["Iridescent shell for a league dynasty.","Concha iridiscente para una dinastía de liga.","Une nacre irisée pour une dynastie de ligue.","Schillerndes Perlmutt für eine Liga-Dynastie.","Concha iridescente para uma dinastia da liga."],
+["Warm amber cells, a little sticky.","Celdas de ámbar cálido, algo pegajosas.","Des alvéoles d'ambre chaud, un peu collantes.","Warme Bernsteinwaben, etwas klebrig.","Células de âmbar quente, meio grudentas."],
+["An explorer's map, worn at the edges.","Un mapa de explorador, gastado por los bordes.","Une carte d'explorateur, usée sur les bords.","Eine Entdeckerkarte mit abgegriffenen Rändern.","Um mapa de explorador, gasto nas bordas."],
+// flags
+["The classic.","El clásico.","Le classique.","Der Klassiker.","O clássico."],
+["Mark it on the map.","Márcalo en el mapa.","Marque-le sur la carte.","Markier es auf der Karte.","Marque no mapa."],
+["Gold star for spotting it.","Estrella de oro por encontrarla.","Une étoile d'or pour l'avoir repérée.","Ein Goldstern fürs Entdecken.","Estrela de ouro por achar."],
+["For the max-level sweeper.","Para quien llega al nivel máximo.","Pour le démineur de niveau max.","Für Räumer auf höchstem Level.","Para quem chega ao nível máximo."],
+["Keep the streak burning.","Mantén viva la racha.","Garde la série allumée.","Halte die Serie am Brennen.","Mantenha a sequência acesa."],
+["For those who wander far.","Para quienes llegan lejos.","Pour ceux qui vont loin.","Für alle, die weit ziehen.","Para quem vai longe."],
+["A cut stone marks the spot.","Una piedra tallada marca el lugar.","Une pierre taillée marque l'endroit.","Ein geschliffener Stein markiert die Stelle.","Uma pedra lapidada marca o local."],
+["A wreath for level 20.","Una corona de laurel para el nivel 20.","Une couronne de laurier pour le niveau 20.","Ein Kranz für Level 20.","Uma coroa de louros para o nível 20."],
+["Light the way through the campaign.","Ilumina el camino de la campaña.","Éclaire le chemin de la campagne.","Erleuchte den Weg durch die Kampagne.","Ilumine o caminho da campanha."],
+["First prize.","Primer premio.","Premier prix.","Erster Preis.","Primeiro prêmio."],
+["For the sharpest eyes.","Para los ojos más agudos.","Pour les yeux les plus perçants.","Für die schärfsten Augen.","Para os olhos mais atentos."],
+["Bragging rights, on every mine.","Para presumir, en cada mina.","De quoi frimer, sur chaque mine.","Zum Angeben, auf jeder Mine.","Para se gabar, em cada mina."],
+["You made the podium.","Llegaste al podio.","Tu es monté sur le podium.","Du hast es aufs Treppchen geschafft.","Você chegou ao pódio."],
+["Runner-up, and closing in.","Segundo puesto, y acercándote.","Deuxième, et tu te rapproches.","Zweiter, und dicht dran.","Segundo lugar, e chegando perto."],
+["Fastest of the day.","El más rápido del día.","Le plus rapide du jour.","Der Schnellste des Tages.","O mais rápido do dia."],
+["A dynasty, set in pearl.","Una dinastía, engastada en perla.","Une dynastie, sertie de perle.","Eine Dynastie, in Perle gefasst.","Uma dinastia, cravejada de pérola."],
+// reveals
+["Tiles melt softly away.","Las casillas se desvanecen suavemente.","Les cases s'effacent en douceur.","Felder schmelzen sanft dahin.","As casas somem suavemente."],
+["Tiles bounce, then vanish.","Las casillas rebotan y desaparecen.","Les cases rebondissent, puis disparaissent.","Felder hüpfen und verschwinden.","As casas quicam e somem."],
+["Tiles turn over like cards.","Las casillas se giran como cartas.","Les cases se retournent comme des cartes.","Felder drehen sich wie Karten um.","As casas viram como cartas."],
+["Tiles crack into four and fall.","Las casillas se parten en cuatro y caen.","Les cases se brisent en quatre et tombent.","Felder zerbrechen in vier Teile und fallen.","As casas racham em quatro e caem."],
+["Tiles burst into sparks.","Las casillas estallan en chispas.","Les cases éclatent en étincelles.","Felder zerplatzen in Funken.","As casas explodem em faíscas."],
+["Tiles sink like a stone in water.","Las casillas se hunden como una piedra en el agua.","Les cases coulent comme une pierre dans l'eau.","Felder sinken wie ein Stein ins Wasser.","As casas afundam como pedra na água."],
+["Tiles break into pixels.","Las casillas se rompen en píxeles.","Les cases se défont en pixels.","Felder zerfallen in Pixel.","As casas se desfazem em pixels."],
+["Tiles burst into little stars.","Las casillas estallan en estrellitas.","Les cases éclatent en petites étoiles.","Felder zerplatzen in kleine Sterne.","As casas explodem em estrelinhas."],
+// sounds and music
+["Gentle taps and chimes.","Toques suaves y campanillas.","Petits tapotements et carillons.","Sanftes Klopfen und Glöckchen.","Toques suaves e sininhos."],
+["8-bit bleeps and bloops.","Pitidos y blips de 8 bits.","Des bips et bloups 8 bits.","8-Bit-Piepser und Blubber.","Bipes e blips de 8 bits."],
+["Warm wooden notes.","Notas cálidas de madera.","Des notes chaudes et boisées.","Warme Holztöne.","Notas quentes de madeira."],
+["Tiny bright chimes.","Campanillas pequeñas y brillantes.","De petits carillons clairs.","Kleine helle Glöckchen.","Sininhos pequenos e brilhantes."],
+["The original. Bright and breezy.","El original. Alegre y ligero.","L'original. Vif et léger.","Das Original. Hell und luftig.","O original. Alegre e leve."],
+["Mellow and late-night.","Suave y de madrugada.","Doux, ambiance de fin de soirée.","Sanft und spätabendlich.","Suave e de fim de noite."],
+// effects
+["Just the sweep of light.","Solo el barrido de luz.","Juste le balayage de lumière.","Nur der Lichtschweif.","Só o rastro de luz."],
+["A burst of colour on every win.","Una explosión de color en cada victoria.","Une explosion de couleurs à chaque victoire.","Ein Farbenregen bei jedem Sieg.","Uma explosão de cor a cada vitória."],
+["Bursts light up the sky.","Estallidos que iluminan el cielo.","Des explosions illuminent le ciel.","Explosionen erhellen den Himmel.","Explosões iluminam o céu."],
+["A shower of twinkling stars.","Una lluvia de estrellas centelleantes.","Une pluie d'étoiles scintillantes.","Ein Schauer funkelnder Sterne.","Uma chuva de estrelas cintilantes."],
+["Comets streak across the sky.","Cometas que cruzan el cielo.","Des comètes traversent le ciel.","Kometen ziehen über den Himmel.","Cometas cruzam o céu."],
+["Shimmering northern lights.","Auroras boreales resplandecientes.","Des aurores boréales chatoyantes.","Schimmernde Nordlichter.","Auroras boreais cintilantes."],
+["A blinding burst of light.","Un estallido de luz cegador.","Un éclat de lumière aveuglant.","Ein blendender Lichtblitz.","Uma explosão de luz ofuscante."],
+["Rings of colour spread across the screen.","Anillos de color se extienden por la pantalla.","Des anneaux de couleur se répandent sur l'écran.","Farbringe breiten sich über den Bildschirm aus.","Anéis de cor se espalham pela tela."],
+["A rain of spinning copper.","Una lluvia de cobre giratorio.","Une pluie de cuivre tournoyant.","Ein Regen aus wirbelndem Kupfer.","Uma chuva de cobre girando."],
+["Party poppers in polished silver.","Cañones de confeti en plata pulida.","Des canons à confettis en argent poli.","Partyknaller in poliertem Silber.","Lança-confetes em prata polida."],
+["Iridescent pearls drift up and shimmer.","Perlas iridiscentes que suben y brillan.","Des perles irisées s'élèvent et chatoient.","Schillernde Perlen steigen auf und glitzern.","Pérolas iridescentes sobem e cintilam."],
+["Gold rings, a shower of medals and falling stars.","Anillos de oro, una lluvia de medallas y estrellas fugaces.","Des anneaux d'or, une pluie de médailles et des étoiles filantes.","Goldene Ringe, ein Medaillenregen und Sternschnuppen.","Anéis de ouro, uma chuva de medalhas e estrelas cadentes."]
+);
+
+// Small pieces: emoji-prefixed toasts, XP labels and other short fragments.
+// Longer messages are built from these: "🏆 {0}" peels off the emoji, "{0} · {1}" splits the rest.
+I18N_ROWS.push(
+["🏆 {0}","🏆 {0}","🏆 {0}","🏆 {0}","🏆 {0}"],
+["⭐ {0}","⭐ {0}","⭐ {0}","⭐ {0}","⭐ {0}"],
+["💡 {0}","💡 {0}","💡 {0}","💡 {0}","💡 {0}"],
+["🏁 {0}","🏁 {0}","🏁 {0}","🏁 {0}","🏁 {0}"],
+["🏅 {0}","🏅 {0}","🏅 {0}","🏅 {0}","🏅 {0}"],
+["🏟️ {0}","🏟️ {0}","🏟️ {0}","🏟️ {0}","🏟️ {0}"],
+["🧭 {0}","🧭 {0}","🧭 {0}","🧭 {0}","🧭 {0}"],
+["🔥 {0}","🔥 {0}","🔥 {0}","🔥 {0}","🔥 {0}"],
+["🔒 {0}","🔒 {0}","🔒 {0}","🔒 {0}","🔒 {0}"],
+["+{0} XP","+{0} XP","+{0} XP","+{0} XP","+{0} XP"],
+["+{0} hints","+{0} pistas","+{0} indices","+{0} Tipps","+{0} dicas"],
+["+{0} XP · +{1} hints","+{0} XP · +{1} pistas","+{0} XP · +{1} indices","+{0} XP · +{1} Tipps","+{0} XP · +{1} dicas"],
+["Rate","%","Taux","Quote","Taxa"],
+["XP","XP","XP","XP","XP"],
+["Milestone {0}","Hito {0}","Étape {0}","Meilenstein {0}","Marco {0}"],
+["{0} cells","{0} casillas","{0} cases","{0} Felder","{0} casas"],
+["Weekly badge","Insignia semanal","Badge hebdo","Wochenabzeichen","Emblema semanal"],
+["{0}-win streak","Racha de {0} victorias","Série de {0} victoires","{0} Siege in Folge","Sequência de {0} vitórias"],
+["All three dailies cleared","Los tres diarios completados","Les trois grilles du jour réussies","Alle drei Tagesfelder gelöst","Os três diários concluídos"],
+["{0}-day daily streak","Racha diaria de {0} días","Série quotidienne de {0} jours","{0}-Tage-Serie","Sequência diária de {0} dias"],
+["A full week! That counts toward Devoted.","¡Una semana entera! Cuenta para Constante.","Une semaine complète ! Ça compte pour Assidu.","Eine ganze Woche! Das zählt für Treu.","Uma semana inteira! Isso conta para Dedicado."],
+["Round {0}: {1} of {2} (final)","Ronda {0}: {1} de {2} (final)","Manche {0} : {1} sur {2} (final)","Runde {0}: Platz {1} von {2} (final)","Rodada {0}: {1} de {2} (final)"],
+["Round {0}: DNF (final)","Ronda {0}: abandonada (final)","Manche {0} : non finie (final)","Runde {0}: nicht beendet (final)","Rodada {0}: não concluída (final)"],
+["Round {0}: {1} of {2}","Ronda {0}: {1} de {2}","Manche {0} : {1} sur {2}","Runde {0}: Platz {1} von {2}","Rodada {0}: {1} de {2}"],
+["{0} of {1}","{0} de {1}","{0} sur {1}","{0} von {1}","{0} de {1}"],
+["Tap again to replace this device's progress","Vuelve a tocar para sustituir el progreso de este dispositivo","Touche encore pour remplacer la progression de cet appareil","Tippe nochmal, um den Fortschritt dieses Geräts zu ersetzen","Toque de novo para substituir o progresso deste aparelho"],
+["Not in the league","Fuera de la liga","Pas dans la ligue","Nicht in der Liga","Fora da liga"]
+);
+
+
 </script>
 <script>
 // ===================== APP =====================
@@ -1207,9 +2011,10 @@ const DENS={calm:{name:'Calm',p:.14,per:20},standard:{name:'Standard',p:.17,per:
 const LV=[0,50,150,300,525,825,1225,1725,2375,3175,4075,5075,6175,7375,8675,10075,11575,13175,14875,16675], MAXL=20;
 
 // ---------- save data (this browser only) ----------
-const KEY='sweep.v1', VERSION='0.12';
+const KEY='sweep.v1', VERSION='1.0';
 // What's new: shown once after an update (newest first). Keep entries short and player-facing.
 const CHANGES=[
+ {v:'1.0',items:['Translations: Español, Français, Deutsch and Português. Change the language in Settings.']},
  {v:'0.12',items:['Backup reminders: a gentle nudge if you haven\'t backed up in a month.','Save your backup to a file, or restore from one. You see the file size before saving.','A Privacy page in Settings: Sweep collects nothing.','This What\'s new page, with the version number.']},
  {v:'0.11',items:['League stars rebalanced: ★ reach 75% (even if you hit a mine) · ★ clear it · ★ no hints and under 2:30.','Ties go to more total progress, then the faster time.','League 0 restarted under the new rules.']},
  {v:'0.10',items:['Leagues: a new season every month with a shared daily round.','Join with a locked name, share one link with your whole month, and climb the star table.','Season recap with podium XP, Season Champion, a crown and a trophy cabinet.']},
@@ -1221,7 +2026,8 @@ function openNews(all){
     ${list.map((c,i)=>`<div class="label" style="margin:${i?14:4}px 2px 6px;text-align:left">Version ${c.v}</div><ul class="news">${c.items.map(x=>`<li>${x}</li>`).join('')}</ul>`).join('')}
     <div class="btns" style="margin-top:12px">${all?'':'<button class="ghost" id="newsAll">Earlier updates</button>'}<button class="primary" data-close>Got it</button></div>`);
   const b=$('#newsAll'); if(b) b.onclick=()=>openNews(true); }
-function checkNews(){ if(S.seenVer===VERSION) return; const veteran=!!S.seenVer||S.xp>0||S.tutDone; S.seenVer=VERSION; persist(); if(veteran) setTimeout(()=>openNews(false),600); }
+function checkNews(){ if(S.seenVer===VERSION) return; const veteran=!!S.seenVer||S.xp>0||S.tutDone; S.seenVer=VERSION; persist();
+  if(!veteran) return; let n=0; const go=()=>{ if(!$('#ov2').classList.contains('hidden')&&n++<60){ setTimeout(go,1000); return; } openNews(false); }; setTimeout(go,600); } // waits if another sheet (e.g. a league link) is open
 function openPrivacy(){
   sheet2(`<h2>Privacy</h2><div class="sub">Short version: Sweep collects nothing.</div><ul class="news">
     <li><b>No accounts, ads, analytics or trackers.</b> Nothing about you or how you play is sent anywhere.</li>
@@ -1241,6 +2047,48 @@ const defSave=()=>({camp:{},shapes:{},rules:{},rrule:'classic',rshape:'standard'
   autoflag:false,loupe:true,fullscreen:false,fd:null,cb:false,lefty:false,name:'',hist:[],week:{},wbadges:0,
   xp:0,ach:{},stats:{},endless:{},streak:0,bestStreak:0,wins:0,dens:'standard',daily:{date:''},appearance:'system',hints:0,hintDate:'',tutDone:false,bk:{last:0,nudged:0},seenVer:''});
 let S=defSave(); try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s) S=Object.assign(defSave(),s); }catch(e){}
+// ---------- translations ----------
+// Every visible text node is translated as it appears (a MutationObserver), using a table keyed by the English text.
+// Keys may contain {0},{1}… for numbers or names; the captured parts are translated too when they match a key.
+// Anything missing simply stays in English.
+const LANGS=[['auto','Automatic'],['en','English'],['es','Español'],['fr','Français'],['de','Deutsch'],['pt','Português']];
+let LANG='en', DICT=null, PATS=[];
+const LOCALE=()=>LANG==='en'?undefined:LANG==='pt'?'pt-BR':LANG;
+const escRe=t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function setLang(){
+  const pref=S.lang||'auto'; let l=pref==='auto'?String(navigator.language||'en').slice(0,2).toLowerCase():pref;
+  const col=(typeof I18N_LANGS!=='undefined')?I18N_LANGS.indexOf(l):-1; if(col<1) l='en'; LANG=l; DICT=null; PATS=[]; document.documentElement.lang=l;
+  if(l==='en') return; DICT=new Map();
+  for(const row of I18N_ROWS){ const v=row[col]; if(!v) continue; DICT.set(row[0],v);
+    if(row[0].includes('{')){ const parts=row[0].split(/(\{\d\})/), idx=[]; let re='^';
+      for(const pt of parts){ const m=pt.match(/^\{(\d)\}$/); if(m){ re+='(.+?)'; idx.push(+m[1]); } else re+=escRe(pt); }
+      PATS.push({re:new RegExp(re+'$','s'),idx,out:v,lit:parts[0],len:row[0].replace(/\{\d\}/g,'').length}); } }
+  PATS.sort((a,b)=>b.len-a.len);
+}
+function tr(text){ if(!DICT||text==null) return null; const m=/^(\s*)([\s\S]*?)(\s*)$/.exec(text), core=m[2].replace(/\s+/g,' ');
+  if(!core||!/[A-Za-z]/.test(core)) return null;
+  let o=DICT.get(core);
+  if(o==null) for(const P of PATS){ if(P.lit&&!core.startsWith(P.lit)) continue; const mm=P.re.exec(core); if(!mm) continue;
+    const args=[]; P.idx.forEach((n,i)=>args[n]=mm[i+1]); o=P.out.replace(/\{(\d)\}/g,(_,n)=>{ const a=args[n]||''; const t=tr(a); return t!=null?t.trim():a; }); break; }
+  return o==null?null:m[1]+o+m[3]; }
+const T=t=>{ const o=tr(t); return o==null?t:o; }; // for text that isn't in the DOM (share messages, file names)
+const TL=t=>String(t).split('\n').map(T).join('\n');
+const SKIP=new Set(['SCRIPT','STYLE','TEXTAREA','INPUT']);
+const done=new WeakMap();
+function trNode(n){ const v=n.nodeValue; if(done.get(n)===v) return; const p=n.parentNode; if(p&&(SKIP.has(p.nodeName)||p.closest&&p.closest('[data-raw]'))){ done.set(n,v); return; }
+  const t=tr(v); if(t!=null&&t!==v) n.nodeValue=t; else if(window.__i18nMiss&&/[A-Za-z]{2}/.test(v)) window.__i18nMiss.add(v.trim()); done.set(n,n.nodeValue); }
+function trAttrs(el){ for(const a of ['placeholder','aria-label','title']){ const v=el.getAttribute&&el.getAttribute(a); if(v){ const t=tr(v); if(t!=null) el.setAttribute(a,t); } } }
+function trTree(root){ if(!DICT) return; if(root.nodeType===3){ trNode(root); return; } if(root.nodeType!==1) return;
+  trAttrs(root); if(SKIP.has(root.nodeName)) return; root.querySelectorAll&&root.querySelectorAll('[placeholder],[aria-label],[title]').forEach(trAttrs);
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); let n; while((n=w.nextNode())) trNode(n); }
+function startI18n(){ setLang(); if(!DICT) return; trTree(document.body);
+  new MutationObserver(ms=>{ for(const m of ms){ if(m.type==='characterData') trNode(m.target); else m.addedNodes.forEach(trTree); } })
+    .observe(document.body,{subtree:true,childList:true,characterData:true}); }
+function openLang(){
+  const cur=S.lang||'auto', auto=String(navigator.language||'en').slice(0,2).toLowerCase(), autoName=(LANGS.find(l=>l[0]===auto)||LANGS[1])[1];
+  sheet2(`<h2>Language</h2><div class="sub">Sweep restarts in the chosen language. Your progress is kept.</div><div class="lb">${LANGS.map(([k,n])=>`<button class="lbr lang${k===cur?' me':''}" data-lang="${k}"><span class="lbk">${k===cur?'✓':''}</span><span class="lbn" data-raw>${k==='auto'?`${T('Automatic')} (${autoName})`:n}</span><span></span></button>`).join('')}</div>
+    <div class="sub" style="font-size:12px;margin:8px 0 0">Translations are new. If something reads oddly, tell the developer.</div><div class="btns" style="margin-top:10px"><button class="ghost" data-close>Close</button></div>`);
+  $$('#sheet2 [data-lang]').forEach(b=>b.onclick=()=>{ const v=b.dataset.lang; if(v===cur){ hideOv2(); return; } if(cfg&&cfg.kind==='endless') saveRun(); S.lang=v; persist(); location.reload(); }); }
 const persist=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
 const statOf=d=>S.stats[d]||(S.stats[d]={played:0,won:0,best:0});
 const endOf=d=>S.endless[d]||(S.endless[d]={best:0,runs:0});
@@ -2003,7 +2851,7 @@ const streakLine=sk=>sk?`<div class="unl"><span style="font-size:20px;line-heigh
 function ovWin(t,nb,got,xp,x2,ups,hg,used,sk){ const st=statOf(cfg.d);
   sheet(`<h2>Cleared</h2><div class="sub">${cfg.daily?'Daily · ':''}${DIFF[cfg.d].name}${used?` · Assisted (${used} hint${used>1?'s':''})`:nb&&st.won>1?' · New best':''}</div>
   <div class="stats"><div><b>${fmt(t)}</b><span>Time</span></div><div><b>${st.best?fmt(st.best):'—'}</b><span>Best</span></div>
-  <div><b>${S.streak}</b><span>Win streak</span></div><div><b>${Math.round(st.won/st.played*100)}%</b><span>Win rate</span></div></div>
+  <div><b>${S.streak}</b><span>Win streak</span></div><div><b>${Math.round(st.won/Math.max(1,st.played,st.won)*100)}%</b><span>Win rate</span></div></div>
   <div class="xpline">+${xp+(cfg.wk?cfg.wk.xp:0)} XP${x2?'<small>Daily 2×</small>':''}${cfg.wk?'<small>incl. weekly</small>':''}</div>
   <div class="starline">${starStr(winStars())}<small>${winStars()&2?'':'Stars: clear · no hints or guesses · under '+clock(parFor(G,cfg.d))}</small></div>
   <div class="row-b"><button class="ghost" data-a="ana">${ICON.chart}Analysis</button><button class="ghost" data-a="share">${ICON.share}Share</button></div>
@@ -2110,9 +2958,9 @@ function openShare(extra){
     <textarea class="code" id="shOut" readonly></textarea>
     <div class="btns" style="margin-top:8px">${code?'<button class="primary" id="shChal">Send challenge</button>':''}<button class="${code?'ghost':'primary'}" id="shLine">Share result only</button><button class="ghost" data-close>Close</button></div>
     ${code?'<div class="sub" style="font-size:12px;margin:6px 0 0">The code holds the board itself, nothing about you except the name above. No account needed.</div>':''}`);
-  const upd=()=>{ $('#shOut').value=msg(); }; upd();
+  const upd=()=>{ $('#shOut').value=TL(msg()); }; upd();
   const nm=$('#shName'); if(nm) nm.oninput=()=>{ S.name=nm.value.trim().slice(0,16); persist(); upd(); };
-  $('#shLine').onclick=()=>shareText(line()); if(code) $('#shChal').onclick=()=>shareText(msg());
+  $('#shLine').onclick=()=>shareText(TL(line())); if(code) $('#shChal').onclick=()=>shareText(TL(msg()));
 }
 function openChallengeEntry(pre){
   sheet2(`<h2>Friend challenge</h2><div class="sub">Paste a challenge a friend sent you. You'll play their exact board and see whose time is faster.</div>
@@ -2162,9 +3010,9 @@ const rStars=x=>x?(pctOf(x)>=LG_PROG?1:0)+(x.won?1:0)+(x.won&&!x.h&&x.t<=LG_TARG
 const STARBITS=[0,1,3,7], LG_RULE=`★ reach ${LG_PROG}% (even if you hit a mine) · ★ clear it · ★ no hints and under 2:30`;
 const addDays=(d,n)=>{ const [y,m,dd]=d.split('-').map(Number), t=new Date(y,m-1,dd+n); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; };
 const prevDay=d=>addDays(d,-1);
-const ord=n=>n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th');
-const dayShort=d=>{ const [y,m,dd]=d.split('-').map(Number); return new Date(y,m-1,dd).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); };
-const monthName=n=>{ const [y,m]=lgMonth(n); return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'}); };
+const ord=n=>LANG==='es'?n+'.º':LANG==='pt'?n+'º':LANG==='de'?n+'.':LANG==='fr'?(n===1?'1er':n+'e'):n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th');
+const dayShort=d=>{ const [y,m,dd]=d.split('-').map(Number); return new Date(y,m-1,dd).toLocaleDateString(LOCALE(),{weekday:'short',month:'short',day:'numeric'}); };
+const monthName=n=>{ const [y,m]=lgMonth(n); return new Date(y,m-1,1).toLocaleDateString(LOCALE(),{month:'long',year:'numeric'}); };
 const lgCur=()=>lgNo(today()), lgDay=()=>+today().slice(8);
 const lgLeft=()=>{ const [y,m]=lgMonth(lgCur()), end=new Date(y,m,1), ms=end-new Date(), d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5); return d?`${d}d ${h}h left`:`${h}h left`; };
 const FPC={}; const fdPrint=d=>FPC[d]||(FPC[d]=fdBoard(d).fp);
@@ -2230,7 +3078,7 @@ function lgRecap(r){
   const {n,me,rows,xp,got,ups}=r;
   sheet2(`<h2>League ${n} is over</h2><div class="sub">${monthName(n)} · ${rows.length} player${rows.length>1?'s':''}</div>
     <div class="stats"><div class="${me.rank===1?'win':''}"><b>${ord(me.rank)}</b><span>Your place</span></div><div><b>${me.stars}★</b><span>Stars</span></div></div>
-    <div class="lb">${rows.slice(0,3).map(x=>`<div class="lbr${x.me?' me':''}"><span class="lbk">${x.rank}</span><span class="lbn">${esc(x.name)}${x.me?' <small>(you)</small>':''}</span><span class="lbt">${x.stars}★</span></div>`).join('')}</div>
+    <div class="lb">${rows.slice(0,3).map(x=>`<div class="lbr${x.me?' me':''}"><span class="lbk">${x.rank}</span><span class="lbn"><span data-raw>${esc(x.name)}</span>${x.me?' <small>(you)</small>':''}</span><span class="lbt">${x.stars}★</span></div>`).join('')}</div>
     ${xp?`<div class="xpline">+${xp} XP<small>Season bonus</small></div>`:'<div class="sub" style="margin:0 0 10px">Season rewards need you to finish ahead of at least one player.</div>'}
     ${(ups||[]).map(lvlLine).join('')}${got.map(unl).join('')}
     <div class="btns"><button class="primary" id="lgNext">Join League ${lgCur()}</button><button class="ghost" data-close>Close</button></div>`);
@@ -2266,7 +3114,7 @@ function lgShareText(){ const n=lgCur(), day=lgDay(), x=myRes(n,day), me=tableRo
   const head=x?`Sweep League ${n} · Round ${day} · ${x.won?clock(x.t):`💥 ${pctOf(x)}%`} ${starStr(STARBITS[rStars(x)])}`:`Sweep League ${n}`;
   return `${head}\nSeason: ${me?me.stars:0}★ from ${me?me.rounds:0} round${me&&me.rounds===1?'':'s'}\nTap to update my results in your league: ${APP_URL}#l=${myCode()}`; }
 function openJoin(){
-  const n=lgCur(), [y,m]=lgMonth(n), end=new Date(y,m,0).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  const n=lgCur(), [y,m]=lgMonth(n), end=new Date(y,m,0).toLocaleDateString(LOCALE(),{month:'short',day:'numeric'});
   sheet2(`<h2>Join League ${n}</h2><div class="sub">${monthName(n)} · ${lgLeft()}</div>
     <div class="sub" style="text-align:left;margin:0 0 12px">Every day there's a new round: the same Intermediate board for every player, one attempt. Each round earns up to three stars: reach ${LG_PROG}% (even if you then hit a mine), clear the board, and clear it with no hints in under ${clock(LG_TARGET)}. The season table adds up your stars.</div>
     <div class="label" style="margin:0 2px 6px;text-align:left">League name</div><input class="code nm" id="lgName" maxlength="16" placeholder="Pick a name" value="${(S.name||'').replace(/"/g,'&quot;')}">
@@ -2310,28 +3158,28 @@ function ovRound(won,r){ const n=cfg.season, x=myRes(n,cfg.round)||{won,t:r.t,h:
   <div class="stats"><div><b>${won?fmt(r.t):pctOf(x)+'%'}</b><span>${won?'Time':'Cleared'}</span></div><div><b>${me?me.stars+'★':'—'}</b><span>Season</span></div></div>
   <div class="starline">${starStr(STARBITS[sr])}<small>${sr<3?LG_RULE:'Perfect round'}</small></div>
   ${won?`<div class="xpline">+${r.xp} XP${r.wk?'<small>incl. weekly</small>':''}</div>`:''}
-  <div class="sub" style="margin:-2px 0 12px">${tb.length>1?`Table: <b>${ord(me.rank)}</b> of ${tb.length}${rr.length>1?` · Round: ${ord(mr.rank)} of ${rr.length} so far`:''}`:'No other players yet. Share your season code and ask friends to join.'}</div>
+  <div class="sub" style="margin:-2px 0 12px">${tb.length>1?`Table: ${ord(me.rank)} of ${tb.length}${rr.length>1?` · Round: ${ord(mr.rank)} of ${rr.length} so far`:''}`:'No other players yet. Share your season code and ask friends to join.'}</div>
   ${won?`${weekLine(r.wk)}${r.ups.map(lvlLine).join('')}${r.got.map(unl).join('')}`:''}
   <div class="btns"><button class="primary" data-a="lgshare">${ICON.share} Share with the league</button><button class="ghost" data-a="lgopen">League table</button>${won?'<button class="ghost" data-a="ana">Analysis</button>':''}<button class="ghost" data-a="home">Home</button></div>`); }
 function openLgShare(){ const n=lgCur(), Z=sea(n);
   sheet2(`<h2>Share with the league</h2><div class="sub">Your link carries every round you've played this month. One tap brings a friend's table up to date, so share it whenever you like.</div>
-    <div class="sub" style="text-align:left;margin:0 0 8px">Playing as <b style="color:var(--ink)">${esc(Z.name)}</b> · locked for League ${n}</div>
+    <div class="sub" style="text-align:left;margin:0 0 8px">Playing as ${esc(Z.name)} · locked for League ${n}</div>
     <textarea class="code" id="lgOut" readonly></textarea>
     <div class="btns" style="margin-top:8px"><button class="primary" id="lgGo">Share</button><button class="ghost" data-close>Close</button></div>
     <div class="sub" style="font-size:12px;margin:6px 0 0">The link holds your league name, your round times and a random player ID. Nothing else about you, and no account.</div>`);
-  $('#lgOut').value=lgShareText(); $('#lgGo').onclick=()=>shareText(lgShareText()); }
+  $('#lgOut').value=TL(lgShareText()); $('#lgGo').onclick=()=>shareText(TL(lgShareText())); }
 let lgTab='table';
 function openLeague(tab){
   lgFinalize(); const n=lgCur(), Z=sea(n), day=lgDay(), L=lgS(); tab=tab||lgTab; lgTab=tab;
   const played=!!myRes(n,day), P=sea(n-1), hasPrev=!!(P.fin&&P.joined)||Object.keys(P.m).length>0;
-  const row=(r,val,sub)=>`<div class="lbr${r.me?' me':''}"><span class="lbk">${r.rank}</span><span class="lbn">${esc(r.name)}${crown(r.pr)}${r.me?' <small>(you)</small>':''}</span><span class="lbt">${val}${sub?`<small>${sub}</small>`:''}</span></div>`;
+  const row=(r,val,sub)=>`<div class="lbr${r.me?' me':''}"><span class="lbk">${r.rank}</span><span class="lbn"><span data-raw>${esc(r.name)}${crown(r.pr)}</span>${r.me?' <small>(you)</small>':''}</span><span class="lbt">${val}${sub?`<small>${sub}</small>`:''}</span></div>`;
   let body='';
   if(tab==='table'){ const rows=tableRows(n);
     body=rows.length?`<div class="lb">${rows.map(r=>row(r,r.stars+'★',`${r.rounds} round${r.rounds===1?'':'s'}`)).join('')}</div>`:'<div class="sub" style="margin:8px 0 12px">No players yet. Join and share your code to start the table.</div>'; }
   else if(tab==='round'){ const rows=roundRows(n,day), others=rows.filter(r=>!r.me).length;
     body=!played&&Z.joined?`<div class="sub" style="margin:8px 0 12px">${others} player${others===1?' has':'s have'} played Round ${day}. Play to see their results.</div>`
       :rows.length?`<div class="lb">${rows.map(r=>row(r,starStr(STARBITS[r.stars]),r.won?fmt(r.t):`💥 at ${r.p}%`)).join('')}</div>`:'<div class="sub" style="margin:8px 0 12px">No results for this round yet.</div>'; }
-  else { const f=P.fin; body=f?`<div class="sub" style="margin:0 0 8px">Final table · ${P.joined?`you finished ${ord(f.rank)} of ${f.n}`:'you didn\'t play'}</div><div class="lb">${f.top.map((r,i)=>`<div class="lbr${r.me?' me':''}"><span class="lbk">${i+1}</span><span class="lbn">${esc(r.name)}${r.me?' <small>(you)</small>':''}</span><span class="lbt">${r.stars}★</span></div>`).join('')}</div>`
+  else { const f=P.fin; body=f?`<div class="sub" style="margin:0 0 8px">Final table · ${P.joined?`you finished ${ord(f.rank)} of ${f.n}`:'you didn\'t play'}</div><div class="lb">${f.top.map((r,i)=>`<div class="lbr${r.me?' me':''}"><span class="lbk">${i+1}</span><span class="lbn"><span data-raw>${esc(r.name)}</span>${r.me?' <small>(you)</small>':''}</span><span class="lbt">${r.stars}★</span></div>`).join('')}</div>`
       :`<div class="lb">${tableRows(n-1).map(r=>row(r,r.stars+'★','')).join('')}</div><div class="sub" style="font-size:12px;margin:-6px 0 10px">Final results lock at the end of the 1st. Late codes still count until then.</div>`; }
   const T=L.tiers, live=k=>T[k].last===prevDay(today())||T[k].last===today()?T[k].st:0;
   sheet2(`<h2>League ${n}</h2><div class="sub">${monthName(n)} · Round ${day} of ${lgLen(n)} · ${lgLeft()}</div>
@@ -2790,9 +3638,10 @@ function renderHome(){
     +`<div class="slabel">Accessibility</div>`+sw('cb','Colourblind-safe numbers')+sw('lefty','Left-handed controls')+`<button class="srow" id="howto"><span>How to play</span><span style="color:var(--sub);font-weight:600">Tutorial ›</span></button>`
     +(window.__sweepInstall?`<button class="srow" id="installBtn"><span>Install as an app</span><span style="color:var(--sub);font-weight:600">›</span></button>`:'')
     +`<button class="srow" id="backupBtn"><span>Backup &amp; restore</span><span style="color:var(--sub);font-weight:600">›</span></button>`
+    +`<button class="srow" id="langBtn"><span>Language</span><span style="color:var(--sub);font-weight:600" data-raw>${(LANGS.find(l=>l[0]===(S.lang||'auto'))||LANGS[0])[1]==='Automatic'?T('Automatic'):(LANGS.find(l=>l[0]===S.lang)||LANGS[0])[1]} ›</span></button>`
     +`<button class="srow" id="newsBtn"><span>What's new</span><span style="color:var(--sub);font-weight:600">v${VERSION} ›</span></button>`
     +`<button class="srow" id="privBtn"><span>Privacy</span><span style="color:var(--sub);font-weight:600">›</span></button>`;
-  $('#howto').onclick=startTutorial; $('#backupBtn').onclick=openBackup; $('#newsBtn').onclick=()=>openNews(true); $('#privBtn').onclick=openPrivacy;
+  $('#howto').onclick=startTutorial; $('#backupBtn').onclick=openBackup; $('#newsBtn').onclick=()=>openNews(true); $('#langBtn').onclick=openLang; $('#privBtn').onclick=openPrivacy;
   const ib=$('#installBtn'); if(ib) ib.onclick=async()=>{ const ev=window.__sweepInstall; if(!ev) return; ev.prompt(); try{ await ev.userChoice; }catch(e){} window.__sweepInstall=null; renderHome(); };
   $$('[data-ap]').forEach(b=>b.onclick=()=>{ S.appearance=b.dataset.ap; persist(); applyTheme(); renderHome(); });
   $$('[data-set]').forEach(b=>b.onclick=()=>{ const k=b.dataset.set; S[k]=!S[k]; persist();
@@ -2871,7 +3720,7 @@ function renderCharts(){
       const med=T.map((e,i)=>{ const w=T.slice(Math.max(0,i-4),i+1).map(x=>x.s).sort((a,b)=>a-b); return w[w.length>>1]; });
       if(T.length>1) g.append(svgEl('path',{d:med.map((v,i)=>(i?'L':'M')+sx(i).toFixed(1)+' '+sy(v).toFixed(1)).join(''),fill:'none',stroke:acc,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
       T.forEach((e,i)=>{ const dot=svgEl('circle',{cx:sx(i),cy:sy(e.s),r:4,fill:acc,'fill-opacity':.35,stroke:panel,'stroke-width':2}); g.append(dot);
-        const hit=svgEl('circle',{cx:sx(i),cy:sy(e.s),r:12,fill:'transparent'}); g.append(hit); tipOn(hit,[fmt(e.s),new Date(e.t).toLocaleDateString(undefined,{month:'short',day:'numeric'})+` · median ${fmt(med[i])}`]); });
+        const hit=svgEl('circle',{cx:sx(i),cy:sy(e.s),r:12,fill:'transparent'}); g.append(hit); tipOn(hit,[fmt(e.s),new Date(e.t).toLocaleDateString(LOCALE(),{month:'short',day:'numeric'})+` · median ${fmt(med[i])}`]); });
       const best=Math.min(...T.map(e=>e.s)), tl=svgEl('text',{x:W-pr,y:h-5,'text-anchor':'end',fill:sub,'font-size':10}); tl.textContent=`Best ${fmt(best)} · latest median ${fmt(med[med.length-1])}`; g.append(tl);
       c.append(g); } }
   // 2) weekly win rate, last 8 weeks
@@ -2925,7 +3774,7 @@ if(darkMQ){ const f=()=>{ if(S.appearance==='system'){ applyTheme(); if(cur==='s
 $('#pauseBtn').innerHTML=ICON.pause; $('#back').innerHTML=ICON.back; $('#restart').innerHTML=ICON.restart; $('#tDig').innerHTML=ICON.dig; $('#tFlag').innerHTML=ICON.flag;
 $('#homeTheme').innerHTML=ICON.palette; $('#endIco').innerHTML=ICON.map; $('#icoT').innerHTML=ICON.palette; $('#icoA').innerHTML=ICON.trophy;
 $$('.topbar .iconbtn').forEach(b=>b.innerHTML=ICON.back);
-delete S.devAll; applyTheme(); lgS(); lgFinalize(); renderHome(); handleLink(); checkNews();
+delete S.devAll; startI18n(); applyTheme(); lgS(); lgFinalize(); renderHome(); handleLink(); checkNews();
 if(document.fonts) document.fonts.ready.then(()=>{ render(); if(cur==='style') renderStyle(); });
 </script>
 <script>

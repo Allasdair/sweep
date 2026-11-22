@@ -137,6 +137,7 @@ td:first-child,th:first-child{text-align:left;font-weight:600}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,-160%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:16px;font-weight:600;font-size:14px;transition:transform .4s cubic-bezier(.2,.9,.3,1.15);z-index:9;width:max-content;max-width:90vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 #toast.on{transform:translate(-50%,0)}
 #ov2{position:fixed;z-index:6}
+button.lbr.lang{border:0;font:inherit;color:inherit;width:100%;cursor:pointer}
 .nudge{align-items:flex-start}.nudge .nb,.filec .nb{display:flex;gap:8px;margin-top:10px}
 button.sm{padding:9px 14px;font-size:13.5px;min-width:0;width:auto;margin:0}
 .filec{margin:4px 0 12px;align-items:flex-start;text-align:left}
@@ -531,9 +532,10 @@ const DENS={calm:{name:'Calm',p:.14,per:20},standard:{name:'Standard',p:.17,per:
 const LV=[0,50,150,300,525,825,1225,1725,2375,3175,4075,5075,6175,7375,8675,10075,11575,13175,14875,16675], MAXL=20;
 
 // ---------- save data (this browser only) ----------
-const KEY='sweep.v1', VERSION='0.12';
+const KEY='sweep.v1', VERSION='1.0';
 // What's new: shown once after an update (newest first). Keep entries short and player-facing.
 const CHANGES=[
+ {v:'1.0',items:['Translations: Español, Français, Deutsch and Português. Change the language in Settings.']},
  {v:'0.12',items:['Backup reminders: a gentle nudge if you haven\'t backed up in a month.','Save your backup to a file, or restore from one. You see the file size before saving.','A Privacy page in Settings: Sweep collects nothing.','This What\'s new page, with the version number.']},
  {v:'0.11',items:['League stars rebalanced: ★ reach 75% (even if you hit a mine) · ★ clear it · ★ no hints and under 2:30.','Ties go to more total progress, then the faster time.','League 0 restarted under the new rules.']},
  {v:'0.10',items:['Leagues: a new season every month with a shared daily round.','Join with a locked name, share one link with your whole month, and climb the star table.','Season recap with podium XP, Season Champion, a crown and a trophy cabinet.']},
@@ -545,7 +547,8 @@ function openNews(all){
     ${list.map((c,i)=>`<div class="label" style="margin:${i?14:4}px 2px 6px;text-align:left">Version ${c.v}</div><ul class="news">${c.items.map(x=>`<li>${x}</li>`).join('')}</ul>`).join('')}
     <div class="btns" style="margin-top:12px">${all?'':'<button class="ghost" id="newsAll">Earlier updates</button>'}<button class="primary" data-close>Got it</button></div>`);
   const b=$('#newsAll'); if(b) b.onclick=()=>openNews(true); }
-function checkNews(){ if(S.seenVer===VERSION) return; const veteran=!!S.seenVer||S.xp>0||S.tutDone; S.seenVer=VERSION; persist(); if(veteran) setTimeout(()=>openNews(false),600); }
+function checkNews(){ if(S.seenVer===VERSION) return; const veteran=!!S.seenVer||S.xp>0||S.tutDone; S.seenVer=VERSION; persist();
+  if(!veteran) return; let n=0; const go=()=>{ if(!$('#ov2').classList.contains('hidden')&&n++<60){ setTimeout(go,1000); return; } openNews(false); }; setTimeout(go,600); } // waits if another sheet (e.g. a league link) is open
 function openPrivacy(){
   sheet2(`<h2>Privacy</h2><div class="sub">Short version: Sweep collects nothing.</div><ul class="news">
     <li><b>No accounts, ads, analytics or trackers.</b> Nothing about you or how you play is sent anywhere.</li>
@@ -565,6 +568,48 @@ const defSave=()=>({camp:{},shapes:{},rules:{},rrule:'classic',rshape:'standard'
   autoflag:false,loupe:true,fullscreen:false,fd:null,cb:false,lefty:false,name:'',hist:[],week:{},wbadges:0,
   xp:0,ach:{},stats:{},endless:{},streak:0,bestStreak:0,wins:0,dens:'standard',daily:{date:''},appearance:'system',hints:0,hintDate:'',tutDone:false,bk:{last:0,nudged:0},seenVer:''});
 let S=defSave(); try{ const s=JSON.parse(localStorage.getItem(KEY)); if(s) S=Object.assign(defSave(),s); }catch(e){}
+// ---------- translations ----------
+// Every visible text node is translated as it appears (a MutationObserver), using a table keyed by the English text.
+// Keys may contain {0},{1}… for numbers or names; the captured parts are translated too when they match a key.
+// Anything missing simply stays in English.
+const LANGS=[['auto','Automatic'],['en','English'],['es','Español'],['fr','Français'],['de','Deutsch'],['pt','Português']];
+let LANG='en', DICT=null, PATS=[];
+const LOCALE=()=>LANG==='en'?undefined:LANG==='pt'?'pt-BR':LANG;
+const escRe=t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function setLang(){
+  const pref=S.lang||'auto'; let l=pref==='auto'?String(navigator.language||'en').slice(0,2).toLowerCase():pref;
+  const col=(typeof I18N_LANGS!=='undefined')?I18N_LANGS.indexOf(l):-1; if(col<1) l='en'; LANG=l; DICT=null; PATS=[]; document.documentElement.lang=l;
+  if(l==='en') return; DICT=new Map();
+  for(const row of I18N_ROWS){ const v=row[col]; if(!v) continue; DICT.set(row[0],v);
+    if(row[0].includes('{')){ const parts=row[0].split(/(\{\d\})/), idx=[]; let re='^';
+      for(const pt of parts){ const m=pt.match(/^\{(\d)\}$/); if(m){ re+='(.+?)'; idx.push(+m[1]); } else re+=escRe(pt); }
+      PATS.push({re:new RegExp(re+'$','s'),idx,out:v,lit:parts[0],len:row[0].replace(/\{\d\}/g,'').length}); } }
+  PATS.sort((a,b)=>b.len-a.len);
+}
+function tr(text){ if(!DICT||text==null) return null; const m=/^(\s*)([\s\S]*?)(\s*)$/.exec(text), core=m[2].replace(/\s+/g,' ');
+  if(!core||!/[A-Za-z]/.test(core)) return null;
+  let o=DICT.get(core);
+  if(o==null) for(const P of PATS){ if(P.lit&&!core.startsWith(P.lit)) continue; const mm=P.re.exec(core); if(!mm) continue;
+    const args=[]; P.idx.forEach((n,i)=>args[n]=mm[i+1]); o=P.out.replace(/\{(\d)\}/g,(_,n)=>{ const a=args[n]||''; const t=tr(a); return t!=null?t.trim():a; }); break; }
+  return o==null?null:m[1]+o+m[3]; }
+const T=t=>{ const o=tr(t); return o==null?t:o; }; // for text that isn't in the DOM (share messages, file names)
+const TL=t=>String(t).split('\n').map(T).join('\n');
+const SKIP=new Set(['SCRIPT','STYLE','TEXTAREA','INPUT']);
+const done=new WeakMap();
+function trNode(n){ const v=n.nodeValue; if(done.get(n)===v) return; const p=n.parentNode; if(p&&(SKIP.has(p.nodeName)||p.closest&&p.closest('[data-raw]'))){ done.set(n,v); return; }
+  const t=tr(v); if(t!=null&&t!==v) n.nodeValue=t; else if(window.__i18nMiss&&/[A-Za-z]{2}/.test(v)) window.__i18nMiss.add(v.trim()); done.set(n,n.nodeValue); }
+function trAttrs(el){ for(const a of ['placeholder','aria-label','title']){ const v=el.getAttribute&&el.getAttribute(a); if(v){ const t=tr(v); if(t!=null) el.setAttribute(a,t); } } }
+function trTree(root){ if(!DICT) return; if(root.nodeType===3){ trNode(root); return; } if(root.nodeType!==1) return;
+  trAttrs(root); if(SKIP.has(root.nodeName)) return; root.querySelectorAll&&root.querySelectorAll('[placeholder],[aria-label],[title]').forEach(trAttrs);
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); let n; while((n=w.nextNode())) trNode(n); }
+function startI18n(){ setLang(); if(!DICT) return; trTree(document.body);
+  new MutationObserver(ms=>{ for(const m of ms){ if(m.type==='characterData') trNode(m.target); else m.addedNodes.forEach(trTree); } })
+    .observe(document.body,{subtree:true,childList:true,characterData:true}); }
+function openLang(){
+  const cur=S.lang||'auto', auto=String(navigator.language||'en').slice(0,2).toLowerCase(), autoName=(LANGS.find(l=>l[0]===auto)||LANGS[1])[1];
+  sheet2(`<h2>Language</h2><div class="sub">Sweep restarts in the chosen language. Your progress is kept.</div><div class="lb">${LANGS.map(([k,n])=>`<button class="lbr lang${k===cur?' me':''}" data-lang="${k}"><span class="lbk">${k===cur?'✓':''}</span><span class="lbn" data-raw>${k==='auto'?`${T('Automatic')} (${autoName})`:n}</span><span></span></button>`).join('')}</div>
+    <div class="sub" style="font-size:12px;margin:8px 0 0">Translations are new. If something reads oddly, tell the developer.</div><div class="btns" style="margin-top:10px"><button class="ghost" data-close>Close</button></div>`);
+  $$('#sheet2 [data-lang]').forEach(b=>b.onclick=()=>{ const v=b.dataset.lang; if(v===cur){ hideOv2(); return; } if(cfg&&cfg.kind==='endless') saveRun(); S.lang=v; persist(); location.reload(); }); }
 const persist=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} };
 const statOf=d=>S.stats[d]||(S.stats[d]={played:0,won:0,best:0});
 const endOf=d=>S.endless[d]||(S.endless[d]={best:0,runs:0});
@@ -1327,7 +1372,7 @@ const streakLine=sk=>sk?`<div class="unl"><span style="font-size:20px;line-heigh
 function ovWin(t,nb,got,xp,x2,ups,hg,used,sk){ const st=statOf(cfg.d);
   sheet(`<h2>Cleared</h2><div class="sub">${cfg.daily?'Daily · ':''}${DIFF[cfg.d].name}${used?` · Assisted (${used} hint${used>1?'s':''})`:nb&&st.won>1?' · New best':''}</div>
   <div class="stats"><div><b>${fmt(t)}</b><span>Time</span></div><div><b>${st.best?fmt(st.best):'—'}</b><span>Best</span></div>
-  <div><b>${S.streak}</b><span>Win streak</span></div><div><b>${Math.round(st.won/st.played*100)}%</b><span>Win rate</span></div></div>
+  <div><b>${S.streak}</b><span>Win streak</span></div><div><b>${Math.round(st.won/Math.max(1,st.played,st.won)*100)}%</b><span>Win rate</span></div></div>
   <div class="xpline">+${xp+(cfg.wk?cfg.wk.xp:0)} XP${x2?'<small>Daily 2×</small>':''}${cfg.wk?'<small>incl. weekly</small>':''}</div>
   <div class="starline">${starStr(winStars())}<small>${winStars()&2?'':'Stars: clear · no hints or guesses · under '+clock(parFor(G,cfg.d))}</small></div>
   <div class="row-b"><button class="ghost" data-a="ana">${ICON.chart}Analysis</button><button class="ghost" data-a="share">${ICON.share}Share</button></div>
@@ -1434,9 +1479,9 @@ function openShare(extra){
     <textarea class="code" id="shOut" readonly></textarea>
     <div class="btns" style="margin-top:8px">${code?'<button class="primary" id="shChal">Send challenge</button>':''}<button class="${code?'ghost':'primary'}" id="shLine">Share result only</button><button class="ghost" data-close>Close</button></div>
     ${code?'<div class="sub" style="font-size:12px;margin:6px 0 0">The code holds the board itself, nothing about you except the name above. No account needed.</div>':''}`);
-  const upd=()=>{ $('#shOut').value=msg(); }; upd();
+  const upd=()=>{ $('#shOut').value=TL(msg()); }; upd();
   const nm=$('#shName'); if(nm) nm.oninput=()=>{ S.name=nm.value.trim().slice(0,16); persist(); upd(); };
-  $('#shLine').onclick=()=>shareText(line()); if(code) $('#shChal').onclick=()=>shareText(msg());
+  $('#shLine').onclick=()=>shareText(TL(line())); if(code) $('#shChal').onclick=()=>shareText(TL(msg()));
 }
 function openChallengeEntry(pre){
   sheet2(`<h2>Friend challenge</h2><div class="sub">Paste a challenge a friend sent you. You'll play their exact board and see whose time is faster.</div>
@@ -1486,9 +1531,9 @@ const rStars=x=>x?(pctOf(x)>=LG_PROG?1:0)+(x.won?1:0)+(x.won&&!x.h&&x.t<=LG_TARG
 const STARBITS=[0,1,3,7], LG_RULE=`★ reach ${LG_PROG}% (even if you hit a mine) · ★ clear it · ★ no hints and under 2:30`;
 const addDays=(d,n)=>{ const [y,m,dd]=d.split('-').map(Number), t=new Date(y,m-1,dd+n); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; };
 const prevDay=d=>addDays(d,-1);
-const ord=n=>n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th');
-const dayShort=d=>{ const [y,m,dd]=d.split('-').map(Number); return new Date(y,m-1,dd).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); };
-const monthName=n=>{ const [y,m]=lgMonth(n); return new Date(y,m-1,1).toLocaleDateString(undefined,{month:'long',year:'numeric'}); };
+const ord=n=>LANG==='es'?n+'.º':LANG==='pt'?n+'º':LANG==='de'?n+'.':LANG==='fr'?(n===1?'1er':n+'e'):n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th');
+const dayShort=d=>{ const [y,m,dd]=d.split('-').map(Number); return new Date(y,m-1,dd).toLocaleDateString(LOCALE(),{weekday:'short',month:'short',day:'numeric'}); };
+const monthName=n=>{ const [y,m]=lgMonth(n); return new Date(y,m-1,1).toLocaleDateString(LOCALE(),{month:'long',year:'numeric'}); };
 const lgCur=()=>lgNo(today()), lgDay=()=>+today().slice(8);
 const lgLeft=()=>{ const [y,m]=lgMonth(lgCur()), end=new Date(y,m,1), ms=end-new Date(), d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5); return d?`${d}d ${h}h left`:`${h}h left`; };
 const FPC={}; const fdPrint=d=>FPC[d]||(FPC[d]=fdBoard(d).fp);
@@ -1554,7 +1599,7 @@ function lgRecap(r){
   const {n,me,rows,xp,got,ups}=r;
   sheet2(`<h2>League ${n} is over</h2><div class="sub">${monthName(n)} · ${rows.length} player${rows.length>1?'s':''}</div>
     <div class="stats"><div class="${me.rank===1?'win':''}"><b>${ord(me.rank)}</b><span>Your place</span></div><div><b>${me.stars}★</b><span>Stars</span></div></div>
-    <div class="lb">${rows.slice(0,3).map(x=>`<div class="lbr${x.me?' me':''}"><span class="lbk">${x.rank}</span><span class="lbn">${esc(x.name)}${x.me?' <small>(you)</small>':''}</span><span class="lbt">${x.stars}★</span></div>`).join('')}</div>
+    <div class="lb">${rows.slice(0,3).map(x=>`<div class="lbr${x.me?' me':''}"><span class="lbk">${x.rank}</span><span class="lbn"><span data-raw>${esc(x.name)}</span>${x.me?' <small>(you)</small>':''}</span><span class="lbt">${x.stars}★</span></div>`).join('')}</div>
     ${xp?`<div class="xpline">+${xp} XP<small>Season bonus</small></div>`:'<div class="sub" style="margin:0 0 10px">Season rewards need you to finish ahead of at least one player.</div>'}
     ${(ups||[]).map(lvlLine).join('')}${got.map(unl).join('')}
     <div class="btns"><button class="primary" id="lgNext">Join League ${lgCur()}</button><button class="ghost" data-close>Close</button></div>`);
@@ -1590,7 +1635,7 @@ function lgShareText(){ const n=lgCur(), day=lgDay(), x=myRes(n,day), me=tableRo
   const head=x?`Sweep League ${n} · Round ${day} · ${x.won?clock(x.t):`💥 ${pctOf(x)}%`} ${starStr(STARBITS[rStars(x)])}`:`Sweep League ${n}`;
   return `${head}\nSeason: ${me?me.stars:0}★ from ${me?me.rounds:0} round${me&&me.rounds===1?'':'s'}\nTap to update my results in your league: ${APP_URL}#l=${myCode()}`; }
 function openJoin(){
-  const n=lgCur(), [y,m]=lgMonth(n), end=new Date(y,m,0).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  const n=lgCur(), [y,m]=lgMonth(n), end=new Date(y,m,0).toLocaleDateString(LOCALE(),{month:'short',day:'numeric'});
   sheet2(`<h2>Join League ${n}</h2><div class="sub">${monthName(n)} · ${lgLeft()}</div>
     <div class="sub" style="text-align:left;margin:0 0 12px">Every day there's a new round: the same Intermediate board for every player, one attempt. Each round earns up to three stars: reach ${LG_PROG}% (even if you then hit a mine), clear the board, and clear it with no hints in under ${clock(LG_TARGET)}. The season table adds up your stars.</div>
     <div class="label" style="margin:0 2px 6px;text-align:left">League name</div><input class="code nm" id="lgName" maxlength="16" placeholder="Pick a name" value="${(S.name||'').replace(/"/g,'&quot;')}">
@@ -1634,28 +1679,28 @@ function ovRound(won,r){ const n=cfg.season, x=myRes(n,cfg.round)||{won,t:r.t,h:
   <div class="stats"><div><b>${won?fmt(r.t):pctOf(x)+'%'}</b><span>${won?'Time':'Cleared'}</span></div><div><b>${me?me.stars+'★':'—'}</b><span>Season</span></div></div>
   <div class="starline">${starStr(STARBITS[sr])}<small>${sr<3?LG_RULE:'Perfect round'}</small></div>
   ${won?`<div class="xpline">+${r.xp} XP${r.wk?'<small>incl. weekly</small>':''}</div>`:''}
-  <div class="sub" style="margin:-2px 0 12px">${tb.length>1?`Table: <b>${ord(me.rank)}</b> of ${tb.length}${rr.length>1?` · Round: ${ord(mr.rank)} of ${rr.length} so far`:''}`:'No other players yet. Share your season code and ask friends to join.'}</div>
+  <div class="sub" style="margin:-2px 0 12px">${tb.length>1?`Table: ${ord(me.rank)} of ${tb.length}${rr.length>1?` · Round: ${ord(mr.rank)} of ${rr.length} so far`:''}`:'No other players yet. Share your season code and ask friends to join.'}</div>
   ${won?`${weekLine(r.wk)}${r.ups.map(lvlLine).join('')}${r.got.map(unl).join('')}`:''}
   <div class="btns"><button class="primary" data-a="lgshare">${ICON.share} Share with the league</button><button class="ghost" data-a="lgopen">League table</button>${won?'<button class="ghost" data-a="ana">Analysis</button>':''}<button class="ghost" data-a="home">Home</button></div>`); }
 function openLgShare(){ const n=lgCur(), Z=sea(n);
   sheet2(`<h2>Share with the league</h2><div class="sub">Your link carries every round you've played this month. One tap brings a friend's table up to date, so share it whenever you like.</div>
-    <div class="sub" style="text-align:left;margin:0 0 8px">Playing as <b style="color:var(--ink)">${esc(Z.name)}</b> · locked for League ${n}</div>
+    <div class="sub" style="text-align:left;margin:0 0 8px">Playing as ${esc(Z.name)} · locked for League ${n}</div>
     <textarea class="code" id="lgOut" readonly></textarea>
     <div class="btns" style="margin-top:8px"><button class="primary" id="lgGo">Share</button><button class="ghost" data-close>Close</button></div>
     <div class="sub" style="font-size:12px;margin:6px 0 0">The link holds your league name, your round times and a random player ID. Nothing else about you, and no account.</div>`);
-  $('#lgOut').value=lgShareText(); $('#lgGo').onclick=()=>shareText(lgShareText()); }
+  $('#lgOut').value=TL(lgShareText()); $('#lgGo').onclick=()=>shareText(TL(lgShareText())); }
 let lgTab='table';
 function openLeague(tab){
   lgFinalize(); const n=lgCur(), Z=sea(n), day=lgDay(), L=lgS(); tab=tab||lgTab; lgTab=tab;
   const played=!!myRes(n,day), P=sea(n-1), hasPrev=!!(P.fin&&P.joined)||Object.keys(P.m).length>0;
-  const row=(r,val,sub)=>`<div class="lbr${r.me?' me':''}"><span class="lbk">${r.rank}</span><span class="lbn">${esc(r.name)}${crown(r.pr)}${r.me?' <small>(you)</small>':''}</span><span class="lbt">${val}${sub?`<small>${sub}</small>`:''}</span></div>`;
+  const row=(r,val,sub)=>`<div class="lbr${r.me?' me':''}"><span class="lbk">${r.rank}</span><span class="lbn"><span data-raw>${esc(r.name)}${crown(r.pr)}</span>${r.me?' <small>(you)</small>':''}</span><span class="lbt">${val}${sub?`<small>${sub}</small>`:''}</span></div>`;
   let body='';
   if(tab==='table'){ const rows=tableRows(n);
     body=rows.length?`<div class="lb">${rows.map(r=>row(r,r.stars+'★',`${r.rounds} round${r.rounds===1?'':'s'}`)).join('')}</div>`:'<div class="sub" style="margin:8px 0 12px">No players yet. Join and share your code to start the table.</div>'; }
   else if(tab==='round'){ const rows=roundRows(n,day), others=rows.filter(r=>!r.me).length;
     body=!played&&Z.joined?`<div class="sub" style="margin:8px 0 12px">${others} player${others===1?' has':'s have'} played Round ${day}. Play to see their results.</div>`
       :rows.length?`<div class="lb">${rows.map(r=>row(r,starStr(STARBITS[r.stars]),r.won?fmt(r.t):`💥 at ${r.p}%`)).join('')}</div>`:'<div class="sub" style="margin:8px 0 12px">No results for this round yet.</div>'; }
-  else { const f=P.fin; body=f?`<div class="sub" style="margin:0 0 8px">Final table · ${P.joined?`you finished ${ord(f.rank)} of ${f.n}`:'you didn\'t play'}</div><div class="lb">${f.top.map((r,i)=>`<div class="lbr${r.me?' me':''}"><span class="lbk">${i+1}</span><span class="lbn">${esc(r.name)}${r.me?' <small>(you)</small>':''}</span><span class="lbt">${r.stars}★</span></div>`).join('')}</div>`
+  else { const f=P.fin; body=f?`<div class="sub" style="margin:0 0 8px">Final table · ${P.joined?`you finished ${ord(f.rank)} of ${f.n}`:'you didn\'t play'}</div><div class="lb">${f.top.map((r,i)=>`<div class="lbr${r.me?' me':''}"><span class="lbk">${i+1}</span><span class="lbn"><span data-raw>${esc(r.name)}</span>${r.me?' <small>(you)</small>':''}</span><span class="lbt">${r.stars}★</span></div>`).join('')}</div>`
       :`<div class="lb">${tableRows(n-1).map(r=>row(r,r.stars+'★','')).join('')}</div><div class="sub" style="font-size:12px;margin:-6px 0 10px">Final results lock at the end of the 1st. Late codes still count until then.</div>`; }
   const T=L.tiers, live=k=>T[k].last===prevDay(today())||T[k].last===today()?T[k].st:0;
   sheet2(`<h2>League ${n}</h2><div class="sub">${monthName(n)} · Round ${day} of ${lgLen(n)} · ${lgLeft()}</div>
@@ -2114,9 +2159,10 @@ function renderHome(){
     +`<div class="slabel">Accessibility</div>`+sw('cb','Colourblind-safe numbers')+sw('lefty','Left-handed controls')+`<button class="srow" id="howto"><span>How to play</span><span style="color:var(--sub);font-weight:600">Tutorial ›</span></button>`
     +(window.__sweepInstall?`<button class="srow" id="installBtn"><span>Install as an app</span><span style="color:var(--sub);font-weight:600">›</span></button>`:'')
     +`<button class="srow" id="backupBtn"><span>Backup &amp; restore</span><span style="color:var(--sub);font-weight:600">›</span></button>`
+    +`<button class="srow" id="langBtn"><span>Language</span><span style="color:var(--sub);font-weight:600" data-raw>${(LANGS.find(l=>l[0]===(S.lang||'auto'))||LANGS[0])[1]==='Automatic'?T('Automatic'):(LANGS.find(l=>l[0]===S.lang)||LANGS[0])[1]} ›</span></button>`
     +`<button class="srow" id="newsBtn"><span>What's new</span><span style="color:var(--sub);font-weight:600">v${VERSION} ›</span></button>`
     +`<button class="srow" id="privBtn"><span>Privacy</span><span style="color:var(--sub);font-weight:600">›</span></button>`;
-  $('#howto').onclick=startTutorial; $('#backupBtn').onclick=openBackup; $('#newsBtn').onclick=()=>openNews(true); $('#privBtn').onclick=openPrivacy;
+  $('#howto').onclick=startTutorial; $('#backupBtn').onclick=openBackup; $('#newsBtn').onclick=()=>openNews(true); $('#langBtn').onclick=openLang; $('#privBtn').onclick=openPrivacy;
   const ib=$('#installBtn'); if(ib) ib.onclick=async()=>{ const ev=window.__sweepInstall; if(!ev) return; ev.prompt(); try{ await ev.userChoice; }catch(e){} window.__sweepInstall=null; renderHome(); };
   $$('[data-ap]').forEach(b=>b.onclick=()=>{ S.appearance=b.dataset.ap; persist(); applyTheme(); renderHome(); });
   $$('[data-set]').forEach(b=>b.onclick=()=>{ const k=b.dataset.set; S[k]=!S[k]; persist();
@@ -2195,7 +2241,7 @@ function renderCharts(){
       const med=T.map((e,i)=>{ const w=T.slice(Math.max(0,i-4),i+1).map(x=>x.s).sort((a,b)=>a-b); return w[w.length>>1]; });
       if(T.length>1) g.append(svgEl('path',{d:med.map((v,i)=>(i?'L':'M')+sx(i).toFixed(1)+' '+sy(v).toFixed(1)).join(''),fill:'none',stroke:acc,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
       T.forEach((e,i)=>{ const dot=svgEl('circle',{cx:sx(i),cy:sy(e.s),r:4,fill:acc,'fill-opacity':.35,stroke:panel,'stroke-width':2}); g.append(dot);
-        const hit=svgEl('circle',{cx:sx(i),cy:sy(e.s),r:12,fill:'transparent'}); g.append(hit); tipOn(hit,[fmt(e.s),new Date(e.t).toLocaleDateString(undefined,{month:'short',day:'numeric'})+` · median ${fmt(med[i])}`]); });
+        const hit=svgEl('circle',{cx:sx(i),cy:sy(e.s),r:12,fill:'transparent'}); g.append(hit); tipOn(hit,[fmt(e.s),new Date(e.t).toLocaleDateString(LOCALE(),{month:'short',day:'numeric'})+` · median ${fmt(med[i])}`]); });
       const best=Math.min(...T.map(e=>e.s)), tl=svgEl('text',{x:W-pr,y:h-5,'text-anchor':'end',fill:sub,'font-size':10}); tl.textContent=`Best ${fmt(best)} · latest median ${fmt(med[med.length-1])}`; g.append(tl);
       c.append(g); } }
   // 2) weekly win rate, last 8 weeks
@@ -2249,7 +2295,7 @@ if(darkMQ){ const f=()=>{ if(S.appearance==='system'){ applyTheme(); if(cur==='s
 $('#pauseBtn').innerHTML=ICON.pause; $('#back').innerHTML=ICON.back; $('#restart').innerHTML=ICON.restart; $('#tDig').innerHTML=ICON.dig; $('#tFlag').innerHTML=ICON.flag;
 $('#homeTheme').innerHTML=ICON.palette; $('#endIco').innerHTML=ICON.map; $('#icoT').innerHTML=ICON.palette; $('#icoA').innerHTML=ICON.trophy;
 $$('.topbar .iconbtn').forEach(b=>b.innerHTML=ICON.back);
-delete S.devAll; applyTheme(); lgS(); lgFinalize(); renderHome(); handleLink(); checkNews();
+delete S.devAll; startI18n(); applyTheme(); lgS(); lgFinalize(); renderHome(); handleLink(); checkNews();
 if(document.fonts) document.fonts.ready.then(()=>{ render(); if(cur==='style') renderStyle(); });
 </script>
 </body></html>

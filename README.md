@@ -15,6 +15,8 @@ An ad-free, no-guess minesweeper. Every board can be cleared with logic alone. T
 - **Challenge codes:** send a friend your exact board and race their time, with no server or account.
 - **Progression:** levels, achievements and 60+ cosmetic unlocks. Everything is earned by playing; nothing is for sale.
 - **Accessibility:** colourblind-safe numbers, left-handed controls, a tap magnifier and reduced motion.
+- **Languages:** English, Español, Français, Deutsch and Português (Brasil). Sweep follows your device language, or pick one in Settings → Language. Translations are machine-assisted, and corrections from native speakers are welcome.
+- **Backups:** save your progress as a small text file (the size is shown before you save) or copy a backup code, and restore it on any device.
 
 ## Install
 Open the link above, then:
@@ -50,6 +52,7 @@ The league tests pin "golden" board fingerprints. If one fails, the shared daily
 | `src/app.html` | UI, rendering, sound, progression |
 | `src/engine.js` | Board engine: generation, no-guess solver, hints, rule variants, analysis, challenge codes |
 | `src/camp.js` | Campaign level recipes |
+| `src/i18n_*.js` | Translation tables: one row per English string, `[en, es, fr, de, pt]`. To fix a translation, edit the row; to add a language, add a column |
 | `web/` | Web-app shell: manifest, service worker template, bundled fonts, icons (`icons.js` renders them) |
 | `tests/` | Dependency-free Node tests (`node tests/run.js`) |
 | `docs/` | Built site. Don't edit it by hand; run `build.py` |

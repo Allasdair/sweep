@@ -8,7 +8,8 @@ Needs only Python 3. No dependencies.
 import re, shutil, os, sys, hashlib
 root=os.path.dirname(os.path.abspath(__file__)); src=os.path.join(root,'src'); web=os.path.join(root,'web')
 rd=lambda *p: open(os.path.join(*p),encoding='utf-8').read()
-html=rd(src,'app.html').replace('/*ENGINE*/',rd(src,'engine.js')+'\n'+rd(src,'camp.js'))
+i18n=''.join(rd(src,f)+'\n' for f in sorted(os.listdir(src)) if f.startswith('i18n') and f.endswith('.js'))
+html=rd(src,'app.html').replace('/*ENGINE*/',rd(src,'engine.js')+'\n'+rd(src,'camp.js')+'\n'+i18n)
 ver=re.search(r"VERSION='([\d.]+)'",html).group(1)
 
 if '--single' in sys.argv:

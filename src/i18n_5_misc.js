@@ -1,0 +1,31 @@
+// Small pieces: emoji-prefixed toasts, XP labels and other short fragments.
+// Longer messages are built from these: "🏆 {0}" peels off the emoji, "{0} · {1}" splits the rest.
+I18N_ROWS.push(
+["🏆 {0}","🏆 {0}","🏆 {0}","🏆 {0}","🏆 {0}"],
+["⭐ {0}","⭐ {0}","⭐ {0}","⭐ {0}","⭐ {0}"],
+["💡 {0}","💡 {0}","💡 {0}","💡 {0}","💡 {0}"],
+["🏁 {0}","🏁 {0}","🏁 {0}","🏁 {0}","🏁 {0}"],
+["🏅 {0}","🏅 {0}","🏅 {0}","🏅 {0}","🏅 {0}"],
+["🏟️ {0}","🏟️ {0}","🏟️ {0}","🏟️ {0}","🏟️ {0}"],
+["🧭 {0}","🧭 {0}","🧭 {0}","🧭 {0}","🧭 {0}"],
+["🔥 {0}","🔥 {0}","🔥 {0}","🔥 {0}","🔥 {0}"],
+["🔒 {0}","🔒 {0}","🔒 {0}","🔒 {0}","🔒 {0}"],
+["+{0} XP","+{0} XP","+{0} XP","+{0} XP","+{0} XP"],
+["+{0} hints","+{0} pistas","+{0} indices","+{0} Tipps","+{0} dicas"],
+["+{0} XP · +{1} hints","+{0} XP · +{1} pistas","+{0} XP · +{1} indices","+{0} XP · +{1} Tipps","+{0} XP · +{1} dicas"],
+["Rate","%","Taux","Quote","Taxa"],
+["XP","XP","XP","XP","XP"],
+["Milestone {0}","Hito {0}","Étape {0}","Meilenstein {0}","Marco {0}"],
+["{0} cells","{0} casillas","{0} cases","{0} Felder","{0} casas"],
+["Weekly badge","Insignia semanal","Badge hebdo","Wochenabzeichen","Emblema semanal"],
+["{0}-win streak","Racha de {0} victorias","Série de {0} victoires","{0} Siege in Folge","Sequência de {0} vitórias"],
+["All three dailies cleared","Los tres diarios completados","Les trois grilles du jour réussies","Alle drei Tagesfelder gelöst","Os três diários concluídos"],
+["{0}-day daily streak","Racha diaria de {0} días","Série quotidienne de {0} jours","{0}-Tage-Serie","Sequência diária de {0} dias"],
+["A full week! That counts toward Devoted.","¡Una semana entera! Cuenta para Constante.","Une semaine complète ! Ça compte pour Assidu.","Eine ganze Woche! Das zählt für Treu.","Uma semana inteira! Isso conta para Dedicado."],
+["Round {0}: {1} of {2} (final)","Ronda {0}: {1} de {2} (final)","Manche {0} : {1} sur {2} (final)","Runde {0}: Platz {1} von {2} (final)","Rodada {0}: {1} de {2} (final)"],
+["Round {0}: DNF (final)","Ronda {0}: abandonada (final)","Manche {0} : non finie (final)","Runde {0}: nicht beendet (final)","Rodada {0}: não concluída (final)"],
+["Round {0}: {1} of {2}","Ronda {0}: {1} de {2}","Manche {0} : {1} sur {2}","Runde {0}: Platz {1} von {2}","Rodada {0}: {1} de {2}"],
+["{0} of {1}","{0} de {1}","{0} sur {1}","{0} von {1}","{0} de {1}"],
+["Tap again to replace this device's progress","Vuelve a tocar para sustituir el progreso de este dispositivo","Touche encore pour remplacer la progression de cet appareil","Tippe nochmal, um den Fortschritt dieses Geräts zu ersetzen","Toque de novo para substituir o progresso deste aparelho"],
+["Not in the league","Fuera de la liga","Pas dans la ligue","Nicht in der Liga","Fora da liga"]
+);
