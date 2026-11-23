@@ -129,6 +129,11 @@ button.card:active{transform:scale(.98)}
 .lock{position:absolute;top:13px;right:13px;width:28px;height:28px;border-radius:9px;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center}
 .lock svg.i{width:15px;height:15px}
 .ach{display:flex;gap:14px;align-items:center;padding:13px 2px;border-bottom:1px solid var(--line)}
+.ach>.ico{flex:none} .ach>div:not(.ico){flex:1 1 auto;min-width:0;overflow-wrap:break-word}
+.ach .chip{white-space:normal;flex:0 1 auto;max-width:46%;line-height:1.35;border-radius:12px}
+.ppage{display:none} .ppage.on{display:block}
+#progTabs button{flex:1 1 auto;padding:9px 7px;font-size:12px;white-space:nowrap;min-width:0}
+#awards .scroll{overflow-x:hidden} #statTable{overflow-x:auto} #statTable td:first-child{overflow-wrap:anywhere}
 .ach .ico{color:var(--sub)}
 .ach.got .ico{background:var(--accent);color:var(--accentInk)}
 .ach:not(.got) .t{color:var(--sub)}
@@ -225,7 +230,7 @@ div.srow{cursor:default}
 <section id="home" class="screen on"><div class="scroll">
   <div class="brand"><div><h1>Sweep</h1><p>No-guess minesweeper. Every board can be cleared with logic alone.</p></div>
     <div class="acts"><button class="iconbtn" data-go="style" aria-label="Style" id="homeTheme"></button><button class="iconbtn" data-go="set" aria-label="Settings" id="homeSet"></button></div></div>
-  <button class="card lvl" data-go="awards" id="lvlCard"></button>
+  <button class="card lvl" data-go="awards" data-pt="levels" id="lvlCard"></button>
   <div id="tutCard"></div>
   <div id="bkNudge"></div>
   <div id="resume"></div>
@@ -246,7 +251,7 @@ div.srow{cursor:default}
     <div class="hd"><div class="ico" id="endIco"></div><div><div class="t">Endless</div><div class="s">One map that keeps growing as you clear it.</div></div><div class="r"><b id="eBest">—</b><span>Best</span></div></div>
     <div class="seg" id="dens"></div>
     <div id="endBtns"></div>
-    <button class="srow" data-go="awards" id="expRow" style="margin-top:6px"><span>Expeditions</span><span style="color:var(--sub);font-weight:600" id="expCount"></span></button>
+    <button class="srow" data-go="awards" data-pt="exp" id="expRow" style="margin-top:6px"><span>Expeditions</span><span style="color:var(--sub);font-weight:600" id="expCount"></span></button>
   </div>
   <div class="label">Collection</div>
   <div class="row2">
@@ -287,14 +292,17 @@ div.srow{cursor:default}
 <section id="awards" class="screen">
   <div class="topbar"><button class="iconbtn" data-go="home" aria-label="Back"></button><h2>Progress</h2><span class="c" id="aCount"></span></div>
   <div class="scroll">
-    <div class="label" style="margin-top:8px">Levels <span id="xpTotal"></span></div><div id="road"></div>
-    <div class="label">Achievements</div><div id="achList"></div>
-    <div class="label" id="expLabel">Endless expeditions</div><div id="expList"></div>
-    <div class="label">Over time</div>
-    <div class="seg mini" id="histSeg" style="margin:0 0 10px"></div>
-    <div id="charts"></div>
-    <div class="label">Stats</div><div id="statTable"></div>
-    <div class="foot"><button id="reset">Reset progress</button></div>
+    <div class="seg topseg" id="progTabs"></div>
+    <div class="ppage" data-pp="levels"><div class="label" style="margin-top:0">Levels <span id="xpTotal"></span></div><div id="road"></div></div>
+    <div class="ppage" data-pp="ach"><div class="label" style="margin-top:0" id="achLabel">Achievements</div><div id="achList"></div></div>
+    <div class="ppage" data-pp="exp"><div class="label" style="margin-top:0" id="expLabel">Endless expeditions</div><div id="expList"></div></div>
+    <div class="ppage" data-pp="stats">
+      <div class="label" style="margin-top:0">Stats</div><div id="statTable"></div>
+      <div class="label">Over time</div>
+      <div class="seg mini" id="histSeg" style="margin:0 0 10px"></div>
+      <div id="charts"></div>
+      <div class="foot"><button id="reset">Reset progress</button></div>
+    </div>
   </div>
 </section>
 <div class="overlay hidden" id="ov2"><div class="sheet" id="sheet2"></div></div>
@@ -1528,6 +1536,8 @@ I18N_ROWS.push(
 ["Save your backup to a file, or restore from one. You see the file size before saving.","Guarda tu copia en un archivo o restaura desde uno. Verás el tamaño antes de guardarlo.","Enregistre ta sauvegarde dans un fichier, ou restaure-la depuis un fichier. Tu vois la taille avant d'enregistrer.","Speichere deine Sicherung als Datei oder stelle sie daraus wieder her. Die Dateigröße siehst du vorher.","Salve o backup em arquivo ou restaure a partir de um. Você vê o tamanho antes de salvar."],
 ["A Privacy page in Settings: Sweep collects nothing.","Una página de Privacidad en Ajustes: Sweep no recopila nada.","Une page Confidentialité dans les Réglages : Sweep ne collecte rien.","Eine Datenschutz-Seite in den Einstellungen: Sweep sammelt nichts.","Uma página de Privacidade nas Configurações: o Sweep não coleta nada."],
 ["This What's new page, with the version number.","Esta página de Novedades, con el número de versión.","Cette page Nouveautés, avec le numéro de version.","Diese Neuigkeiten-Seite mit der Versionsnummer.","Esta página de Novidades, com o número da versão."],
+["Progress is split into tabs: Levels, Achievements, Expeditions and Stats.","El progreso ahora está dividido en pestañas: Niveles, Logros, Expediciones y Estadísticas.","La progression est maintenant répartie en onglets : Niveaux, Succès, Expéditions et Statistiques.","Der Fortschritt ist jetzt in Tabs aufgeteilt: Level, Erfolge, Expeditionen und Statistik.","O progresso agora está dividido em abas: Níveis, Conquistas, Expedições e Estatísticas."],
+["Long reward text in Progress now wraps instead of running off the screen.","El texto largo de recompensas en Progreso ahora se ajusta en vez de salirse de la pantalla.","Les longs textes de récompense dans Progression passent maintenant à la ligne au lieu de dépasser de l'écran.","Lange Belohnungstexte im Fortschritt werden jetzt umbrochen, statt aus dem Bildschirm zu laufen.","Textos longos de recompensa em Progresso agora quebram a linha em vez de sair da tela."],
 ["Fixed: pop-up messages could get stuck peeking out at the top of the screen.","Corregido: los mensajes emergentes podían quedarse asomando en la parte superior de la pantalla.","Corrigé : les messages contextuels pouvaient rester coincés en haut de l'écran.","Behoben: Hinweise konnten oben am Bildschirmrand hängen bleiben.","Corrigido: mensagens podiam ficar presas aparecendo no topo da tela."],
 ["Settings now has its own screen: tap the gear next to Style.","Los ajustes ahora tienen su propia pantalla: toca el engranaje junto a Estilo.","Les réglages ont maintenant leur propre écran : touche l'engrenage à côté de Style.","Die Einstellungen haben jetzt einen eigenen Bildschirm: Tippe auf das Zahnrad neben Stil.","As configurações agora têm sua própria tela: toque na engrenagem ao lado de Estilo."],
 ["Effect previews play through before you can start another, so the game stays smooth.","Las vistas previas de efectos terminan antes de poder iniciar otra, para que el juego siga fluido.","Les aperçus d'effets se terminent avant que tu puisses en lancer un autre, pour que le jeu reste fluide.","Effekt-Vorschauen laufen erst zu Ende, bevor du eine neue starten kannst, damit das Spiel flüssig bleibt.","As prévias de efeitos terminam antes que você possa iniciar outra, para o jogo continuar fluido."],
@@ -2022,9 +2032,10 @@ const DENS={calm:{name:'Calm',p:.14,per:20},standard:{name:'Standard',p:.17,per:
 const LV=[0,50,150,300,525,825,1225,1725,2375,3175,4075,5075,6175,7375,8675,10075,11575,13175,14875,16675], MAXL=20;
 
 // ---------- save data (this browser only) ----------
-const KEY='sweep.v1', VERSION='1.1.1';
+const KEY='sweep.v1', VERSION='1.2';
 // What's new: shown once after an update (newest first). Keep entries short and player-facing.
 const CHANGES=[
+ {v:'1.2',items:['Progress is split into tabs: Levels, Achievements, Expeditions and Stats.','Long reward text in Progress now wraps instead of running off the screen.']},
  {v:'1.1.1',items:['Fixed: pop-up messages could get stuck peeking out at the top of the screen.']},
  {v:'1.1',items:['Settings now has its own screen: tap the gear next to Style.','Effect previews play through before you can start another, so the game stays smooth.','Hold-to-flag is a little quicker.']},
  {v:'1.0',items:['Translations: Español, Français, Deutsch and Português. Change the language in Settings.']},
@@ -3590,7 +3601,7 @@ function show(id){
   $('#ctip').classList.remove('on'); loupeHide(); cur=id; $$('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
   if(id==='game') resize(); if(id==='home') renderHome(); if(id==='style') renderStyle(); if(id==='set') renderSettings(); if(id==='awards') renderAwards(); if(id==='camp') renderCamp();
 }
-document.addEventListener('click',e=>{ const g=e.target.closest('[data-go]'); if(g) show(g.dataset.go); });
+document.addEventListener('click',e=>{ const g=e.target.closest('[data-go]'); if(g){ if(g.dataset.pt){ progTab=g.dataset.pt; $('#awards .scroll').scrollTop=0; } show(g.dataset.go); } });
 const gridIco=n=>`<div class="ico" style="grid-template-columns:repeat(${n},1fr);grid-template-rows:repeat(${n},1fr)">${Array.from({length:n*n},(_,i)=>`<i class="${(i*7+n)%5===0?'':'o'}"></i>`).join('')}</div>`;
 function lvlInfo(){ const l=level(); if(l>=MAXL) return {l,max:true,pct:100,txt:`${S.xp.toLocaleString()} XP · Max level`};
   const cur=S.xp-LV[l-1], need=LV[l]-LV[l-1]; return {l,pct:cur/need*100,txt:`${cur} / ${need} XP${REWARDS[l+1]?' · Next: '+REWARDS[l+1].join(', '):''}`}; }
@@ -3696,8 +3707,13 @@ function renderStyle(){
     if(!owned(it)){ toast('🔒 '+lockText(it)); return; }
     S[key]=it.id; persist(); if(key==='theme') applyTheme(); renderStyle(); });
 }
+let progTab='levels';
+const PTABS=[['levels','Levels'],['ach','Achievements'],['exp','Expeditions'],['stats','Stats']];
 function renderAwards(){
-  $('#aCount').textContent=`Level ${level()}`; $('#expLabel').innerHTML=`Endless expeditions <span>${EXP.filter(x=>S.ach[x.id]).length}/${EXP.length}</span>`; $('#xpTotal').textContent=`${S.xp.toLocaleString()} XP total`;
+  $('#progTabs').innerHTML=PTABS.map(([k,n])=>`<button data-ptab="${k}" class="${k===progTab?'on':''}">${n}</button>`).join('');
+  $$('[data-ptab]').forEach(b=>b.onclick=()=>{ if(progTab===b.dataset.ptab) return; progTab=b.dataset.ptab; $('#awards .scroll').scrollTop=0; renderAwards(); });
+  $$('#awards .ppage').forEach(el=>el.classList.toggle('on',el.dataset.pp===progTab));
+  $('#aCount').textContent=`Level ${level()}`; $('#expLabel').innerHTML=`Endless expeditions <span>${EXP.filter(x=>S.ach[x.id]).length}/${EXP.length}</span>`; $('#achLabel').innerHTML=`Achievements <span>${ACH.filter(a=>S.ach[a.id]).length}/${ACH.length}</span>`; $('#xpTotal').textContent=`${S.xp.toLocaleString()} XP total`;
   const l=level();
   $('#road').innerHTML=`<div class="note">Every level-up also gives you +1 hint. Your daily hint refill is ${hintCap()}.</div>`+Array.from({length:MAXL},(_,i)=>{ const n=i+1, got=l>=n, rw=n===1?'4 boards, Pennant flag, Fade reveal, Soft sounds, Daylight soundtrack':(REWARDS[n]||[]).join(', ');
     return `<div class="ach ${got?'got':''} ${n===l?'cur':''}"><div class="ico">${n}</div><div><div class="t">Level ${n}</div><div class="d">${n===1?'Starting kit':LV[i].toLocaleString()+' XP'}</div></div><span class="chip">${rw}</span></div>`; }).join('');
@@ -3713,7 +3729,7 @@ function renderAwards(){
     <tr><td>7-day streaks</td><td colspan="3"></td><td>${S.ds.sevens}</td></tr>
     <tr><td>Milestones</td><td colspan="3"></td><td>${S.mstones}</td></tr>
     <tr><td>Weekly badges</td><td colspan="3"></td><td>${S.wbadges||0}</td></tr></table>`;
-  renderCharts();
+  if(progTab==='stats') renderCharts();
 }
 // ---------- stats over time: time trend, weekly win rate, where you lose ----------
 let histD=1;
