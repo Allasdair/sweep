@@ -137,8 +137,8 @@ th{font-size:10.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.07
 td:first-child,th:first-child{text-align:left;font-weight:600}
 .foot{margin-top:30px;display:flex;justify-content:space-between;align-items:center;color:var(--sub);font-size:12px}
 .foot button{color:var(--sub);font-size:12px;font-weight:600;padding:8px 0}
-#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,-160%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:16px;font-weight:600;font-size:14px;transition:transform .4s cubic-bezier(.2,.9,.3,1.15);z-index:9;width:max-content;max-width:90vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-#toast.on{transform:translate(-50%,0)}
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,calc(-100% - env(safe-area-inset-top) - 40px));visibility:hidden;opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:16px;font-weight:600;font-size:14px;transition:transform .4s cubic-bezier(.2,.9,.3,1.15),opacity .3s,visibility 0s .4s;z-index:9;width:max-content;max-width:90vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#toast.on{transform:translate(-50%,0);visibility:visible;opacity:1;pointer-events:auto;transition:transform .4s cubic-bezier(.2,.9,.3,1.15),opacity .15s,visibility 0s}
 #ov2{position:fixed;z-index:6}
 button.lbr.lang{border:0;font:inherit;color:inherit;width:100%;cursor:pointer}
 .nudge{align-items:flex-start}.nudge .nb,.filec .nb{display:flex;gap:8px;margin-top:10px}
@@ -539,9 +539,10 @@ const DENS={calm:{name:'Calm',p:.14,per:20},standard:{name:'Standard',p:.17,per:
 const LV=[0,50,150,300,525,825,1225,1725,2375,3175,4075,5075,6175,7375,8675,10075,11575,13175,14875,16675], MAXL=20;
 
 // ---------- save data (this browser only) ----------
-const KEY='sweep.v1', VERSION='1.1';
+const KEY='sweep.v1', VERSION='1.1.1';
 // What's new: shown once after an update (newest first). Keep entries short and player-facing.
 const CHANGES=[
+ {v:'1.1.1',items:['Fixed: pop-up messages could get stuck peeking out at the top of the screen.']},
  {v:'1.1',items:['Settings now has its own screen: tap the gear next to Style.','Effect previews play through before you can start another, so the game stays smooth.','Hold-to-flag is a little quicker.']},
  {v:'1.0',items:['Translations: Español, Français, Deutsch and Português. Change the language in Settings.']},
  {v:'0.12',items:['Backup reminders: a gentle nudge if you haven\'t backed up in a month.','Save your backup to a file, or restore from one. You see the file size before saving.','A Privacy page in Settings: Sweep collects nothing.','This What\'s new page, with the version number.']},
@@ -647,10 +648,10 @@ const fmt=t=>t<60?t.toFixed(1)+'s':`${Math.floor(t/60)}:${String(Math.floor(t%60
 const clock=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
 const buzz=p=>{ if(!S.haptics) return; try{ navigator.vibrate&&navigator.vibrate(p); }catch(e){} };
 const tq=[]; let tBusy=false;
-let tTimer=0;
-function toast(m,now){ if(now){ tq.length=0; showToast(m); return; } tq.push(m); if(!tBusy) nextToast(); }
-function nextToast(){ const m=tq.shift(); if(!m){ tBusy=false; return; } showToast(m); }
-function showToast(m){ const el=$('#toast'); tBusy=true; el.textContent=m; el.classList.add('on'); clearTimeout(tTimer);
+let tTimer=0, tCur='';
+function toast(m,now){ if(now){ tq.length=0; showToast(m); return; } if((tBusy&&m===tCur)||tq.includes(m)) return; tq.push(m); if(!tBusy) nextToast(); } // same message is never stacked
+function nextToast(){ const m=tq.shift(); if(!m){ tBusy=false; tCur=''; return; } showToast(m); }
+function showToast(m){ const el=$('#toast'); tBusy=true; tCur=m; el.textContent=m; el.classList.add('on'); clearTimeout(tTimer);
   tTimer=setTimeout(()=>{ el.classList.remove('on'); tTimer=setTimeout(nextToast,420); },2400); }
 function award(id,quiet){
   if(S.ach[id]) return false; S.ach[id]=Date.now(); persist();
