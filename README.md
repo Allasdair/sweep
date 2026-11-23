@@ -39,10 +39,11 @@ python3 build.py            # rebuilds docs/ (the site GitHub Pages serves)
 python3 build.py --single   # dist/sweep.html, one self-contained file
 ```
 
-Run the tests (Node 18+, no installs needed):
+Run the tests (Node 18+; the first needs no installs):
 
 ```sh
 node tests/run.js           # generation, no-guess solving, variants, all 45 campaign levels, league boards, codes
+python3 build.py && node tests/offline.js   # needs Playwright: opens instantly offline / on a dead connection, safe updates
 ```
 
 The league tests pin "golden" board fingerprints. If one fails, the shared daily board changed, so players on different versions would get different boards. Only change them together with a deliberate generator version bump.
@@ -54,7 +55,7 @@ The league tests pin "golden" board fingerprints. If one fails, the shared daily
 | `src/camp.js` | Campaign level recipes |
 | `src/i18n_*.js` | Translation tables: one row per English string, `[en, es, fr, de, pt]`. To fix a translation, edit the row; to add a language, add a column |
 | `web/` | Web-app shell: manifest, service worker template, bundled fonts, icons (`icons.js` renders them) |
-| `tests/` | Dependency-free Node tests (`node tests/run.js`) |
+| `tests/` | Dependency-free Node tests (`node tests/run.js`), plus a browser offline test (`tests/offline.js`, needs Playwright) |
 | `docs/` | Built site. Don't edit it by hand; run `build.py` |
 
 ## How it was made

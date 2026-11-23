@@ -28,7 +28,15 @@ head='''<meta name="description" content="Ad-free, no-guess minesweeper. Every b
 html=html.replace(gf.group(0),head)
 reg='''<script>
 // Offline support + ask the browser to keep saved progress from being cleared under storage pressure
-if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+if('serviceWorker' in navigator) addEventListener('load',()=>{
+  const sw=navigator.serviceWorker, had=!!sw.controller;
+  // A new version finished downloading in the background and took over: it's used next launch.
+  sw.addEventListener('controllerchange',()=>{ if(had&&typeof toast==='function') toast('Update ready. Restart Sweep to use it.'); });
+  sw.register('sw.js').then(reg=>{ let last=Date.now();
+    // Installed apps can stay open for days: re-check for updates when brought back, at most every 30 min.
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&Date.now()-last>18e5){ last=Date.now(); reg.update().catch(()=>{}); } });
+  }).catch(()=>{});
+});
 if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
 </script>
 </body>'''

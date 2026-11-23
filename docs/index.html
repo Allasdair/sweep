@@ -1536,6 +1536,8 @@ I18N_ROWS.push(
 ["Save your backup to a file, or restore from one. You see the file size before saving.","Guarda tu copia en un archivo o restaura desde uno. Verás el tamaño antes de guardarlo.","Enregistre ta sauvegarde dans un fichier, ou restaure-la depuis un fichier. Tu vois la taille avant d'enregistrer.","Speichere deine Sicherung als Datei oder stelle sie daraus wieder her. Die Dateigröße siehst du vorher.","Salve o backup em arquivo ou restaure a partir de um. Você vê o tamanho antes de salvar."],
 ["A Privacy page in Settings: Sweep collects nothing.","Una página de Privacidad en Ajustes: Sweep no recopila nada.","Une page Confidentialité dans les Réglages : Sweep ne collecte rien.","Eine Datenschutz-Seite in den Einstellungen: Sweep sammelt nichts.","Uma página de Privacidade nas Configurações: o Sweep não coleta nada."],
 ["This What's new page, with the version number.","Esta página de Novedades, con el número de versión.","Cette page Nouveautés, avec le numéro de version.","Diese Neuigkeiten-Seite mit der Versionsnummer.","Esta página de Novidades, com o número da versão."],
+["Sweep now opens instantly even when your Wi-Fi is connected but the internet is down. Updates download in the background and are used the next time you open Sweep.","Sweep ahora se abre al instante aunque el Wi-Fi esté conectado pero sin internet. Las actualizaciones se descargan en segundo plano y se usan la próxima vez que abras Sweep.","Sweep s'ouvre maintenant instantanément même quand le Wi-Fi est connecté mais qu'Internet ne répond pas. Les mises à jour se téléchargent en arrière-plan et s'appliquent à la prochaine ouverture de Sweep.","Sweep öffnet jetzt sofort, auch wenn das WLAN verbunden ist, aber das Internet nicht geht. Updates laden im Hintergrund und gelten beim nächsten Öffnen von Sweep.","O Sweep agora abre na hora mesmo com o Wi-Fi conectado mas sem internet. As atualizações baixam em segundo plano e são usadas na próxima vez que você abrir o Sweep."],
+["Update ready. Restart Sweep to use it.","Actualización lista. Reinicia Sweep para usarla.","Mise à jour prête. Redémarre Sweep pour l'utiliser.","Update bereit. Starte Sweep neu, um es zu nutzen.","Atualização pronta. Reinicie o Sweep para usá-la."],
 ["Progress is split into tabs: Levels, Achievements, Expeditions and Stats.","El progreso ahora está dividido en pestañas: Niveles, Logros, Expediciones y Estadísticas.","La progression est maintenant répartie en onglets : Niveaux, Succès, Expéditions et Statistiques.","Der Fortschritt ist jetzt in Tabs aufgeteilt: Level, Erfolge, Expeditionen und Statistik.","O progresso agora está dividido em abas: Níveis, Conquistas, Expedições e Estatísticas."],
 ["Long reward text in Progress now wraps instead of running off the screen.","El texto largo de recompensas en Progreso ahora se ajusta en vez de salirse de la pantalla.","Les longs textes de récompense dans Progression passent maintenant à la ligne au lieu de dépasser de l'écran.","Lange Belohnungstexte im Fortschritt werden jetzt umbrochen, statt aus dem Bildschirm zu laufen.","Textos longos de recompensa em Progresso agora quebram a linha em vez de sair da tela."],
 ["Fixed: pop-up messages could get stuck peeking out at the top of the screen.","Corregido: los mensajes emergentes podían quedarse asomando en la parte superior de la pantalla.","Corrigé : les messages contextuels pouvaient rester coincés en haut de l'écran.","Behoben: Hinweise konnten oben am Bildschirmrand hängen bleiben.","Corrigido: mensagens podiam ficar presas aparecendo no topo da tela."],
@@ -2032,9 +2034,10 @@ const DENS={calm:{name:'Calm',p:.14,per:20},standard:{name:'Standard',p:.17,per:
 const LV=[0,50,150,300,525,825,1225,1725,2375,3175,4075,5075,6175,7375,8675,10075,11575,13175,14875,16675], MAXL=20;
 
 // ---------- save data (this browser only) ----------
-const KEY='sweep.v1', VERSION='1.2';
+const KEY='sweep.v1', VERSION='1.2.1';
 // What's new: shown once after an update (newest first). Keep entries short and player-facing.
 const CHANGES=[
+ {v:'1.2.1',items:['Sweep now opens instantly even when your Wi-Fi is connected but the internet is down. Updates download in the background and are used the next time you open Sweep.']},
  {v:'1.2',items:['Progress is split into tabs: Levels, Achievements, Expeditions and Stats.','Long reward text in Progress now wraps instead of running off the screen.']},
  {v:'1.1.1',items:['Fixed: pop-up messages could get stuck peeking out at the top of the screen.']},
  {v:'1.1',items:['Settings now has its own screen: tap the gear next to Style.','Effect previews play through before you can start another, so the game stays smooth.','Hold-to-flag is a little quicker.']},
@@ -3814,7 +3817,15 @@ if(document.fonts) document.fonts.ready.then(()=>{ render(); if(cur==='style') r
 </script>
 <script>
 // Offline support + ask the browser to keep saved progress from being cleared under storage pressure
-if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+if('serviceWorker' in navigator) addEventListener('load',()=>{
+  const sw=navigator.serviceWorker, had=!!sw.controller;
+  // A new version finished downloading in the background and took over: it's used next launch.
+  sw.addEventListener('controllerchange',()=>{ if(had&&typeof toast==='function') toast('Update ready. Restart Sweep to use it.'); });
+  sw.register('sw.js').then(reg=>{ let last=Date.now();
+    // Installed apps can stay open for days: re-check for updates when brought back, at most every 30 min.
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&Date.now()-last>18e5){ last=Date.now(); reg.update().catch(()=>{}); } });
+  }).catch(()=>{});
+});
 if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
 </script>
 </body></html>
